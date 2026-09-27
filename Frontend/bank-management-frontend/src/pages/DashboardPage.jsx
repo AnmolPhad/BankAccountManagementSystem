@@ -2,6 +2,7 @@ import {
   TrendingUp, CreditCard, ArrowUpRight, Activity, ShieldCheck, User
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import BankingNavigation from '../components/BankingNavigation';
 import styles from './DashboardPage.module.css';
 
 // ── Stat card component ────────────────────────────────────────────────────────
@@ -38,6 +39,9 @@ export default function DashboardPage() {
           Welcome back, <strong>{displayName}</strong>. Your banking session is active and secure.
         </p>
       </div>
+
+      {/* ── Banking Services Navigation (EXCLUSIVELY ON DASHBOARD) ──────────── */}
+      <BankingNavigation />
 
       {/* Stats row */}
       <section className={styles.statsGrid}>

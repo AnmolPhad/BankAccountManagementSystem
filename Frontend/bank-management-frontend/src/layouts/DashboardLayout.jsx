@@ -4,7 +4,6 @@ import {
   CreditCard, ArrowRightLeft, History, Database, Bell
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import BankingNavigation from '../components/BankingNavigation';
 import styles from './DashboardLayout.module.css';
 
 export default function DashboardLayout() {
@@ -129,9 +128,6 @@ export default function DashboardLayout() {
             </button>
           </div>
         </header>
-
-        {/* ── Persistent Banking Navigation / Quick Actions ───────────────── */}
-        <BankingNavigation />
 
         {/* ── Page Content (Outlet for active route) ───────────────────────── */}
         <div className={styles.contentContainer}>
