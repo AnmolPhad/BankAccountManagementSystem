@@ -32,16 +32,19 @@ namespace BankAccountManagementSystem.API.Services.Implementations
     public class AuthService : IAuthService
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IAccountService _accountService;
         private readonly JwtSettings _jwtSettings;
         private readonly ILogger<AuthService> _logger;
 
         // Constructor injection — ASP.NET Core DI fills these automatically.
         public AuthService(
             UserManager<ApplicationUser> userManager,
+            IAccountService accountService,
             IOptions<JwtSettings> jwtSettings,
             ILogger<AuthService> logger)
         {
             _userManager = userManager;
+            _accountService = accountService;
             _jwtSettings = jwtSettings.Value;
             _logger = logger;
         }
@@ -49,25 +52,28 @@ namespace BankAccountManagementSystem.API.Services.Implementations
         // ─────────────────────────────────────────────────────────────────────
         // REGISTER
         // ─────────────────────────────────────────────────────────────────────
-        public async Task<(bool Success, string Message)> RegisterAsync(RegisterRequest request)
+        public async Task<RegisterResponse> RegisterAsync(RegisterRequest request)
         {
             // 1. Check duplicate email
             var existingByEmail = await _userManager.FindByEmailAsync(request.Email);
             if (existingByEmail != null)
-                return (false, "An account with this email already exists.");
+            {
+                return new RegisterResponse
+                {
+                    Success = false,
+                    Message = "An account with this email already exists."
+                };
+            }
 
-            // 2. Check duplicate employee code
-            var existingByCode = await _userManager.Users
-                .FirstOrDefaultAsync(u => u.EmployeeCode == request.EmployeeCode);
-            if (existingByCode != null)
-                return (false, "An account with this employee code already exists.");
+            // 2. Auto-generate unique Customer ID (e.g. CUST-00001)
+            var customerId = await GenerateUniqueCustomerIdAsync();
 
             // 3. Build the user object (no password yet — Identity sets it)
             var user = new ApplicationUser
             {
                 UserName = request.Email,       // Identity uses UserName for lookup
                 Email = request.Email,
-                EmployeeCode = request.EmployeeCode,
+                EmployeeCode = customerId,      // Stores backend-generated Customer ID
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 PhoneNumber = request.Phone,
@@ -76,22 +82,50 @@ namespace BankAccountManagementSystem.API.Services.Implementations
             };
 
             // 4. CreateAsync: Identity validates the password, hashes it, saves the user.
-            // We NEVER see the plain-text password after this point.
             var result = await _userManager.CreateAsync(user, request.Password);
 
             if (!result.Succeeded)
             {
-                // Identity returns detailed errors (e.g., "Password too short")
                 var errors = string.Join(" | ", result.Errors.Select(e => e.Description));
                 _logger.LogWarning("Registration failed for {Email}: {Errors}", request.Email, errors);
-                return (false, errors);
+                return new RegisterResponse
+                {
+                    Success = false,
+                    Message = errors
+                };
             }
 
-            // 5. Always assign "User" role — never let the request specify a role.
+            // 5. Always assign "User" role
             await _userManager.AddToRoleAsync(user, "User");
 
-            _logger.LogInformation("New user registered: {Email}", request.Email);
-            return (true, "User registered successfully.");
+            _logger.LogInformation("New user registered: {Email} (Customer ID: {CustomerId})",
+                request.Email, customerId);
+
+            return new RegisterResponse
+            {
+                Success = true,
+                Message = "Registration successful.",
+                CustomerId = customerId
+            };
+        }
+
+        private async Task<string> GenerateUniqueCustomerIdAsync()
+        {
+            var count = await _userManager.Users.CountAsync();
+            string candidate;
+            bool exists;
+            int number = count + 1;
+            do
+            {
+                candidate = $"CUST-{number:D5}";
+                exists = await _userManager.Users.AnyAsync(u => u.EmployeeCode == candidate);
+                if (exists)
+                {
+                    number++;
+                }
+            } while (exists);
+
+            return candidate;
         }
 
         // ─────────────────────────────────────────────────────────────────────

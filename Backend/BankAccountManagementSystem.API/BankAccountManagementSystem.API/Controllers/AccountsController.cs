@@ -209,5 +209,26 @@ namespace BankAccountManagementSystem.API.Controllers
 
             return Ok(new { success = true, message });
         }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // GET /api/v1/accounts/by-number/{accountNumber}
+        // ─────────────────────────────────────────────────────────────────────
+        /// <summary>
+        /// Retrieves active account details by customer-facing account number.
+        /// Useful for validating destination account numbers before cheque transfers.
+        /// </summary>
+        [HttpGet("by-number/{accountNumber}")]
+        [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetAccountByNumber(string accountNumber)
+        {
+            var account = await _accountService.GetAccountByNumberAsync(accountNumber);
+            if (account == null)
+            {
+                return NotFound(new { success = false, message = $"Account with number '{accountNumber}' not found." });
+            }
+
+            return Ok(account);
+        }
     }
 }

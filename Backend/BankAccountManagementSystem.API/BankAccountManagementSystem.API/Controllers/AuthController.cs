@@ -1,6 +1,7 @@
 using BankAccountManagementSystem.API.DTOs.Auth;
 using BankAccountManagementSystem.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace BankAccountManagementSystem.API.Controllers
 {
@@ -20,36 +21,36 @@ namespace BankAccountManagementSystem.API.Controllers
 
         /// <summary>
         /// Registers a new user.
+        /// Automatically generates Customer ID and default Bank Account Number.
         /// </summary>
         [HttpPost("register")]
-        [ProducesResponseType(typeof(object), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(object), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(object), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status409Conflict)]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            var (success, message) = await _authService.RegisterAsync(request);
+            var response = await _authService.RegisterAsync(request);
 
-            if (!success)
+            if (!response.Success)
             {
-                var isDuplicate = message.Contains("already exists");
+                var isDuplicate = response.Message.Contains("already exists");
                 return isDuplicate
-                    ? Conflict(new { success = false, message })
-                    : BadRequest(new { success = false, message });
+                    ? Conflict(response)
+                    : BadRequest(response);
             }
 
-            return StatusCode(StatusCodes.Status201Created, new
-            {
-                success = true,
-                message
-            });
+            return StatusCode(StatusCodes.Status201Created, response);
         }
 
         /// <summary>
         /// Logs in an existing user and returns a JWT token.
+        /// Rate-limited to 10 requests per minute per IP address (HTTP 429 when exceeded).
         /// </summary>
         [HttpPost("login")]
+        [EnableRateLimiting("login")]
         [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var response = await _authService.LoginAsync(request);

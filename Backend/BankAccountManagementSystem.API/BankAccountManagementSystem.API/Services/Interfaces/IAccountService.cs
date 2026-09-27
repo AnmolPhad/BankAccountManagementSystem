@@ -37,5 +37,10 @@ namespace BankAccountManagementSystem.API.Services.Interfaces
         /// Returns whether the account exists, whether caller is authorized, whether it was already inactive, and a status message.
         /// </summary>
         Task<(bool Exists, bool IsAuthorized, bool AlreadyInactive, string Message)> DeactivateAccountAsync(Guid id, string callerId, bool isAdmin);
+
+        /// <summary>
+        /// Looks up an active account by its customer-facing 10-digit account number.
+        /// </summary>
+        Task<AccountResponse?> GetAccountByNumberAsync(string accountNumber);
     }
 }

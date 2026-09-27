@@ -47,17 +47,24 @@ namespace BankAccountManagementSystem.API.Middleware
             }
             catch (Exception ex)
             {
+                // Retrieve correlation ID set by CorrelationIdMiddleware (if present)
+                var correlationId = context.Items.TryGetValue("CorrelationId", out var cid)
+                    ? cid?.ToString()
+                    : context.TraceIdentifier;
+
                 // Log the full exception details (safe — this goes to your log files, not the response)
-                _logger.LogError(ex, "Unhandled exception on {Method} {Path}",
+                _logger.LogError(ex,
+                    "Unhandled exception on {Method} {Path} | CorrelationId: {CorrelationId}",
                     context.Request.Method,
-                    context.Request.Path);
+                    context.Request.Path,
+                    correlationId);
 
                 // Return a clean JSON error response to the client
-                await HandleExceptionAsync(context, ex);
+                await HandleExceptionAsync(context, ex, correlationId);
             }
         }
 
-        private async Task HandleExceptionAsync(HttpContext context, Exception exception)
+        private async Task HandleExceptionAsync(HttpContext context, Exception exception, string? correlationId)
         {
             context.Response.ContentType = "application/json";
 
@@ -95,6 +102,7 @@ namespace BankAccountManagementSystem.API.Middleware
 
             // In development: include the exception message (helpful for debugging)
             // In production:  return a generic message (security best practice)
+            // Never expose stack traces, SQL details, passwords, or JWT tokens.
             var message = _environment.IsDevelopment()
                 ? exception.Message
                 : "Something went wrong. Please try again later.";
@@ -103,7 +111,8 @@ namespace BankAccountManagementSystem.API.Middleware
             {
                 success = false,
                 message = message,
-                statusCode = statusCode
+                statusCode = statusCode,
+                correlationId = correlationId
             };
 
             // Serialize with camelCase to match JSON conventions

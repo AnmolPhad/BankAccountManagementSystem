@@ -205,6 +205,23 @@ namespace BankAccountManagementSystem.API.Services.Implementations
         }
 
         // ─────────────────────────────────────────────────────────────────────
+        // GET ACCOUNT BY NUMBER
+        // ─────────────────────────────────────────────────────────────────────
+        public async Task<AccountResponse?> GetAccountByNumberAsync(string accountNumber)
+        {
+            var account = await _dbContext.Accounts
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.AccountNumber == accountNumber && a.IsActive);
+
+            if (account == null)
+            {
+                return null;
+            }
+
+            return MapToResponse(account);
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
         // HELPER: Account Number Generation Strategy
         // ─────────────────────────────────────────────────────────────────────
         /// <summary>

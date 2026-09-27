@@ -17,9 +17,9 @@ namespace BankAccountManagementSystem.API.Services.Interfaces
     {
         /// <summary>
         /// Registers a new user with the "User" role.
-        /// Returns a result indicating success or failure with a message.
+        /// Returns a result containing success status, message, and backend-generated credentials (CustomerId and AccountNumber).
         /// </summary>
-        Task<(bool Success, string Message)> RegisterAsync(RegisterRequest request);
+        Task<RegisterResponse> RegisterAsync(RegisterRequest request);
 
         /// <summary>
         /// Authenticates a user by email/password and returns a JWT token.
