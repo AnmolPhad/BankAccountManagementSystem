@@ -15,6 +15,7 @@ import TransferPage from './pages/TransferPage';
 import AccountDetailsPage from './pages/AccountDetailsPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import BackupRestorePage from './pages/BackupRestorePage';
+import ProfilePage from './pages/ProfilePage';
 
 export default function App() {
   return (
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="/withdraw" element={<WithdrawPage />} />
             <Route path="/transfer" element={<TransferPage />} />
             <Route path="/backup-restore" element={<BackupRestorePage />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
 
           {/* Redirect root to dashboard */}

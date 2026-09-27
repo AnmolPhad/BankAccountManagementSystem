@@ -42,8 +42,9 @@ namespace BankAccountManagementSystem.API.Services.Implementations
         public async Task<(bool Exists, bool IsAuthorized, TransactionResponse? Transaction)>
             DepositAsync(Guid accountId, decimal amount, string? description, string callerId, bool isAdmin)
         {
-            // 1. Load the account
+            // 1. Load the account with owner user
             var account = await _context.Accounts
+                .Include(a => a.User)
                 .FirstOrDefaultAsync(a => a.AccountId == accountId);
 
             if (account is null)
@@ -54,17 +55,14 @@ namespace BankAccountManagementSystem.API.Services.Implementations
                 return (Exists: true, IsAuthorized: false, Transaction: null);
 
             // 3. Account must be active
-            // We throw a domain exception here (not return a tuple field) because the account EXISTS
-            // and caller IS authorized — the failure is a business rule, not a routing decision.
-            // ExceptionMiddleware catches InvalidOperationException → 422 Unprocessable Entity.
             if (!account.IsActive)
                 throw new AccountInactiveException(account.AccountNumber);
 
-            // 4. Amount validation — belt-and-suspenders (DTO already validates this)
+            // 4. Amount validation
             if (amount <= 0)
                 throw new InvalidTransactionException("Deposit amount must be greater than zero.");
 
-            // 5. Apply balance change (server-calculated — client never supplies balance)
+            // 5. Apply balance change (server-calculated)
             account.Balance  += amount;
             account.UpdatedAt = DateTime.UtcNow;
 
@@ -74,6 +72,7 @@ namespace BankAccountManagementSystem.API.Services.Implementations
             {
                 TransactionId    = Guid.NewGuid(),
                 AccountId        = account.AccountId,
+                Account          = account,
                 TransactionType  = TransactionType.Deposit,
                 TransactionMode  = TransactionMode.Cash,
                 Amount           = amount,
@@ -85,11 +84,6 @@ namespace BankAccountManagementSystem.API.Services.Implementations
             };
 
             _context.Transactions.Add(transaction);
-
-            // 7. SaveChangesAsync — EF Core will:
-            //    a. UPDATE Accounts SET Balance=..., UpdatedAt=... WHERE AccountId=@id AND RowVersion=@original
-            //    b. INSERT INTO Transactions (...)
-            //    If another request already updated RowVersion, EF throws DbUpdateConcurrencyException → 409.
             await _context.SaveChangesAsync();
 
             _logger.LogInformation(
@@ -106,6 +100,7 @@ namespace BankAccountManagementSystem.API.Services.Implementations
             WithdrawAsync(Guid accountId, decimal amount, string? description, string callerId, bool isAdmin)
         {
             var account = await _context.Accounts
+                .Include(a => a.User)
                 .FirstOrDefaultAsync(a => a.AccountId == accountId);
 
             if (account is null)
@@ -120,7 +115,6 @@ namespace BankAccountManagementSystem.API.Services.Implementations
             if (amount <= 0)
                 throw new InvalidTransactionException("Withdrawal amount must be greater than zero.");
 
-            // Sufficient balance check — prevents negative balances
             if (account.Balance < amount)
                 throw new InsufficientBalanceException(account.Balance, amount);
 
@@ -132,6 +126,7 @@ namespace BankAccountManagementSystem.API.Services.Implementations
             {
                 TransactionId    = Guid.NewGuid(),
                 AccountId        = account.AccountId,
+                Account          = account,
                 TransactionType  = TransactionType.Withdrawal,
                 TransactionMode  = TransactionMode.Cash,
                 Amount           = amount,
@@ -158,15 +153,15 @@ namespace BankAccountManagementSystem.API.Services.Implementations
         public async Task<(bool Exists, bool IsAuthorized, TransactionResponse? SourceTransaction, TransactionResponse? DestinationTransaction)>
             TransferAsync(Guid sourceAccountId, Guid destinationAccountId, decimal amount, string? description, string callerId, bool isAdmin)
         {
-            // 1. Load source account
+            // 1. Load source account with owner user
             var source = await _context.Accounts
+                .Include(a => a.User)
                 .FirstOrDefaultAsync(a => a.AccountId == sourceAccountId);
 
             if (source is null)
                 return (Exists: false, IsAuthorized: false, SourceTransaction: null, DestinationTransaction: null);
 
-            // 2. Ownership: only source account ownership is checked (transfers FROM your account)
-            //    The destination can belong to any user — that is the purpose of a transfer.
+            // 2. Ownership check on source account
             if (!isAdmin && source.UserId != callerId)
                 return (Exists: true, IsAuthorized: false, SourceTransaction: null, DestinationTransaction: null);
 
@@ -175,9 +170,6 @@ namespace BankAccountManagementSystem.API.Services.Implementations
                 throw new AccountInactiveException(source.AccountNumber);
 
             // 4. Source must be a Checking account
-            //    Savings accounts are restricted to cash transactions involving ONE account only.
-            //    The original requirement: "In a cheque transaction, amount is transferred from one account to another."
-            //    Cheque = Transfer = Checking accounts only as source.
             if (source.AccountType != AccountType.Checking)
                 throw new InvalidAccountTypeException(
                     $"Account '{source.AccountNumber}' is a Savings account. " +
@@ -187,8 +179,9 @@ namespace BankAccountManagementSystem.API.Services.Implementations
             if (sourceAccountId == destinationAccountId)
                 throw new InvalidTransactionException("Source and destination accounts must be different.");
 
-            // 6. Load destination account
+            // 6. Load destination account with owner user
             var destination = await _context.Accounts
+                .Include(a => a.User)
                 .FirstOrDefaultAsync(a => a.AccountId == destinationAccountId);
 
             if (destination is null)
@@ -202,26 +195,11 @@ namespace BankAccountManagementSystem.API.Services.Implementations
             if (amount <= 0)
                 throw new InvalidTransactionException("Transfer amount must be greater than zero.");
 
-            // 9. Source must have sufficient balance
+            // 9. Balance check
             if (source.Balance < amount)
                 throw new InsufficientBalanceException(source.Balance, amount);
 
             // ─── ATOMIC OPERATION using EF Core database transaction ──────────
-            // BEGIN TRANSACTION
-            //   Debit source
-            //   Credit destination
-            //   Insert source Transaction row
-            //   Insert destination Transaction row
-            // COMMIT
-            // Any exception → ROLLBACK → both balances remain unchanged.
-            //
-            // Why not just SaveChangesAsync() twice?
-            // If we debit source and save, then credit destination fails, the money disappears.
-            // A DB transaction guarantees BOTH changes commit or NEITHER does.
-            //
-            // Concurrency: Both account rows have RowVersion concurrency tokens.
-            // If another request modifies either account between our read and save,
-            // DbUpdateConcurrencyException is thrown → ExceptionMiddleware → 409 Conflict.
             await using var dbTransaction = await _context.Database.BeginTransactionAsync();
             try
             {
@@ -236,11 +214,12 @@ namespace BankAccountManagementSystem.API.Services.Implementations
                 destination.Balance  += amount;
                 destination.UpdatedAt = now;
 
-                // Source Transaction row — records the debit on source's ledger
+                // Source Transaction row
                 var sourceTxn = new Transaction
                 {
                     TransactionId    = Guid.NewGuid(),
                     AccountId        = source.AccountId,
+                    Account          = source,
                     TransactionType  = TransactionType.Transfer,
                     TransactionMode  = TransactionMode.Cheque,
                     Amount           = amount,
@@ -248,14 +227,16 @@ namespace BankAccountManagementSystem.API.Services.Implementations
                     Description      = description,
                     ReferenceNumber  = reference + "-SRC",
                     RelatedAccountId = destination.AccountId,
+                    RelatedAccount   = destination,
                     Status           = TransactionStatus.Completed
                 };
 
-                // Destination Transaction row — records the credit on destination's ledger
+                // Destination Transaction row
                 var destinationTxn = new Transaction
                 {
                     TransactionId    = Guid.NewGuid(),
                     AccountId        = destination.AccountId,
+                    Account          = destination,
                     TransactionType  = TransactionType.Transfer,
                     TransactionMode  = TransactionMode.Cheque,
                     Amount           = amount,
@@ -263,16 +244,14 @@ namespace BankAccountManagementSystem.API.Services.Implementations
                     Description      = description,
                     ReferenceNumber  = reference + "-DST",
                     RelatedAccountId = source.AccountId,
+                    RelatedAccount   = source,
                     Status           = TransactionStatus.Completed
                 };
 
                 _context.Transactions.Add(sourceTxn);
                 _context.Transactions.Add(destinationTxn);
 
-                // Single SaveChangesAsync saves all 4 changes (2 UPDATE + 2 INSERT) in one DB round trip.
                 await _context.SaveChangesAsync();
-
-                // Commit the transaction — all changes are now permanent in the database.
                 await dbTransaction.CommitAsync();
 
                 _logger.LogInformation(
@@ -290,8 +269,6 @@ namespace BankAccountManagementSystem.API.Services.Implementations
             }
             catch
             {
-                // Rollback on ANY exception (concurrency, business rule, DB failure).
-                // Because we re-throw, ExceptionMiddleware handles the response.
                 await dbTransaction.RollbackAsync();
                 throw;
             }
@@ -340,13 +317,15 @@ namespace BankAccountManagementSystem.API.Services.Implementations
 
                 if (!isAdmin && account.UserId != callerId)
                     return (AccountExists: true, IsAuthorized: false, Result: null);
-
-                // Inactive accounts still have historical records viewable by authorized users/admin
             }
 
-            // 3. Build IQueryable with AsNoTracking for read-only performance
-            var queryable = _context.Transactions
-                .AsNoTracking();
+            // 3. Build IQueryable with AsNoTracking and eager load User navigation properties
+            IQueryable<Transaction> queryable = _context.Transactions
+                .AsNoTracking()
+                .Include(t => t.Account)
+                    .ThenInclude(a => a!.User)
+                .Include(t => t.RelatedAccount)
+                    .ThenInclude(ra => ra!.User);
 
             // 4. Apply Ownership & Account filter at database query level
             if (query.AccountId.HasValue)
@@ -355,7 +334,6 @@ namespace BankAccountManagementSystem.API.Services.Implementations
             }
             else if (!isAdmin)
             {
-                // Normal user without specific accountId: view all transactions across their own accounts
                 queryable = queryable.Where(t => t.Account!.UserId == callerId);
             }
 
@@ -382,32 +360,16 @@ namespace BankAccountManagementSystem.API.Services.Implementations
                 queryable = queryable.Where(t => t.TransactionMode == query.TransactionMode.Value);
             }
 
-            // 6. Sorting: Newest transaction first (TransactionDate DESC, then TransactionId DESC)
+            // 6. Sorting: Newest transaction first
             queryable = queryable
                 .OrderByDescending(t => t.TransactionDate)
                 .ThenByDescending(t => t.TransactionId);
 
-            // 7. Project to TransactionResponse DTO to avoid tracking and N+1 queries
-            var projected = queryable.Select(t => new TransactionResponse
-            {
-                TransactionId           = t.TransactionId,
-                AccountId               = t.AccountId,
-                AccountNumber           = t.Account != null ? t.Account.AccountNumber : string.Empty,
-                TransactionType         = t.TransactionType.ToString(),
-                TransactionMode         = t.TransactionMode.ToString(),
-                Amount                  = t.Amount,
-                BalanceAfterTransaction = t.Account != null ? t.Account.Balance : 0.00m,
-                TransactionDate         = t.TransactionDate,
-                Description             = t.Description,
-                ReferenceNumber         = t.ReferenceNumber,
-                RelatedAccountId        = t.RelatedAccountId,
-                Status                  = t.Status.ToString()
-            });
-
-            // 8. Execute query: LastN or Paged
+            // 7. Execute query: LastN or Paged
             if (query.LastN.HasValue)
             {
-                var items = await projected.Take(query.LastN.Value).ToListAsync();
+                var txns = await queryable.Take(query.LastN.Value).ToListAsync();
+                var items = txns.Select(t => MapToResponse(t, t.Account)).ToList();
                 var result = new PagedResult<TransactionResponse>
                 {
                     Items      = items,
@@ -420,11 +382,12 @@ namespace BankAccountManagementSystem.API.Services.Implementations
             }
             else
             {
-                var totalCount = await projected.CountAsync();
-                var items = await projected
+                var totalCount = await queryable.CountAsync();
+                var txns = await queryable
                     .Skip((query.Page - 1) * query.PageSize)
                     .Take(query.PageSize)
                     .ToListAsync();
+                var items = txns.Select(t => MapToResponse(t, t.Account)).ToList();
 
                 var result = new PagedResult<TransactionResponse>
                 {
@@ -447,6 +410,9 @@ namespace BankAccountManagementSystem.API.Services.Implementations
             var txn = await _context.Transactions
                 .AsNoTracking()
                 .Include(t => t.Account)
+                    .ThenInclude(a => a!.User)
+                .Include(t => t.RelatedAccount)
+                    .ThenInclude(ra => ra!.User)
                 .FirstOrDefaultAsync(t => t.TransactionId == transactionId);
 
             if (txn is null)
@@ -462,25 +428,6 @@ namespace BankAccountManagementSystem.API.Services.Implementations
         // PRIVATE HELPERS
         // ─────────────────────────────────────────────────────────────────────────────
 
-        /// <summary>
-        /// Generates a cryptographically random, unique transaction reference number.
-        ///
-        /// Format: TXN-YYYYMMDD-XXXXXXXX
-        ///   - TXN    : fixed prefix for easy identification and database query filtering.
-        ///   - YYYYMMDD: UTC date of the transaction (makes references readable by humans).
-        ///   - XXXXXXXX: 8 random uppercase alphanumeric characters (36^8 ≈ 2.8 trillion combinations).
-        ///
-        /// Uniqueness guarantee:
-        ///   - The random suffix space (36^8 combinations) is large enough that collisions are
-        ///     astronomically unlikely even at high transaction volume.
-        ///   - The database enforces a unique index on ReferenceNumber (IX_Transactions_ReferenceNumber)
-        ///     as the final safety net. If a collision ever occurred, the INSERT would fail with a
-        ///     unique constraint violation (caught by ExceptionMiddleware → 500 Internal Server Error).
-        ///   - For Transfer, we append "-SRC" / "-DST" to differentiate the two sides while keeping
-        ///     them grouped by their shared base reference number.
-        ///
-        /// Not supplied by the client — always generated here on the server.
-        /// </summary>
         private static string GenerateReferenceNumber()
         {
             const string chars   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -497,25 +444,80 @@ namespace BankAccountManagementSystem.API.Services.Implementations
 
         /// <summary>
         /// Maps a Transaction entity + its owning Account to the safe outbound TransactionResponse DTO.
-        /// BalanceAfterTransaction is read from account.Balance which is already the updated value
-        /// (balance was mutated in memory before SaveChangesAsync).
+        /// Computes SenderName, ReceiverName, and IsSelfTransfer for cheque transfer operations.
         /// </summary>
-        private static TransactionResponse MapToResponse(Transaction txn, Account account)
+        private static TransactionResponse MapToResponse(Transaction txn, Account? account = null)
         {
+            var currentAccount = account ?? txn.Account;
+            var relatedAccount = txn.RelatedAccount;
+
+            string? senderName = null;
+            string? receiverName = null;
+            string? senderAccountNumber = null;
+            string? receiverAccountNumber = null;
+            bool isSelfTransfer = false;
+
+            if (txn.TransactionType == TransactionType.Transfer)
+            {
+                var primaryUser = currentAccount?.User;
+                var relatedUser = relatedAccount?.User;
+
+                var primaryName = primaryUser != null
+                    ? $"{primaryUser.FirstName} {primaryUser.LastName}".Trim()
+                    : string.Empty;
+                if (string.IsNullOrWhiteSpace(primaryName))
+                    primaryName = primaryUser?.Email ?? currentAccount?.AccountNumber ?? string.Empty;
+
+                var relatedName = relatedUser != null
+                    ? $"{relatedUser.FirstName} {relatedUser.LastName}".Trim()
+                    : string.Empty;
+                if (string.IsNullOrWhiteSpace(relatedName))
+                    relatedName = relatedUser?.Email ?? relatedAccount?.AccountNumber ?? string.Empty;
+
+                bool isDestinationRow = txn.ReferenceNumber.EndsWith("-DST");
+
+                if (isDestinationRow)
+                {
+                    senderName = relatedName;
+                    receiverName = primaryName;
+                    senderAccountNumber = relatedAccount?.AccountNumber;
+                    receiverAccountNumber = currentAccount?.AccountNumber;
+                }
+                else
+                {
+                    senderName = primaryName;
+                    receiverName = relatedName;
+                    senderAccountNumber = currentAccount?.AccountNumber;
+                    receiverAccountNumber = relatedAccount?.AccountNumber;
+                }
+
+                if (currentAccount != null && relatedAccount != null)
+                {
+                    isSelfTransfer = !string.IsNullOrEmpty(currentAccount.UserId) &&
+                                     currentAccount.UserId == relatedAccount.UserId;
+                }
+            }
+
             return new TransactionResponse
             {
                 TransactionId            = txn.TransactionId,
                 AccountId                = txn.AccountId,
-                AccountNumber            = account.AccountNumber,
+                AccountNumber            = currentAccount?.AccountNumber ?? string.Empty,
                 TransactionType          = txn.TransactionType.ToString(),
                 TransactionMode          = txn.TransactionMode.ToString(),
                 Amount                   = txn.Amount,
-                BalanceAfterTransaction  = account.Balance,
+                BalanceAfterTransaction  = currentAccount?.Balance ?? 0.00m,
                 TransactionDate          = txn.TransactionDate,
                 Description              = txn.Description,
                 ReferenceNumber          = txn.ReferenceNumber,
                 RelatedAccountId         = txn.RelatedAccountId,
-                Status                   = txn.Status.ToString()
+                Status                   = txn.Status.ToString(),
+
+                SenderName               = senderName,
+                ReceiverName             = receiverName,
+                SenderAccountNumber      = senderAccountNumber,
+                ReceiverAccountNumber    = receiverAccountNumber,
+                IsSelfTransfer           = isSelfTransfer
             };
         }
     }

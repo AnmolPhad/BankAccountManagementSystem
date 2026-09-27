@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, LogOut, Building2, ShieldCheck,
   CreditCard, ArrowRightLeft, History, Database, Bell
@@ -9,6 +9,7 @@ import styles from './DashboardLayout.module.css';
 export default function DashboardLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
@@ -23,6 +24,32 @@ export default function DashboardLayout() {
     ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() || 'U'
     : 'U';
 
+  const pathname = location.pathname;
+
+  // Active state matching rules:
+  // 1. Dashboard: active ONLY on /dashboard
+  const isDashboardActive = pathname === '/dashboard';
+
+  // 2. Accounts: active on /accounts, /accounts/add, /accounts/:id (BUT NOT /accounts/:id/history)
+  const isAccountsActive =
+    (pathname === '/accounts' || pathname.startsWith('/accounts/')) &&
+    !pathname.endsWith('/history');
+
+  // 3. Transactions: active on /transactions, /deposit, /withdraw, /transfer (BUT NOT /transactions/history)
+  const isTransactionsActive =
+    (pathname === '/transactions' ||
+     pathname === '/deposit' ||
+     pathname === '/withdraw' ||
+     pathname === '/transfer') &&
+    pathname !== '/transactions/history';
+
+  // 4. Transaction History: active on /transactions/history OR any /history route (like /accounts/:id/history)
+  const isTransactionHistoryActive =
+    pathname === '/transactions/history' || pathname.endsWith('/history');
+
+  // 5. Save & Restore: active ONLY on /backup-restore
+  const isBackupRestoreActive = pathname === '/backup-restore';
+
   return (
     <div className={styles.root}>
 
@@ -36,9 +63,7 @@ export default function DashboardLayout() {
         <nav className={styles.nav}>
           <NavLink
             to="/dashboard"
-            className={({ isActive }) =>
-              `${styles.navItem} ${isActive ? styles.navActive : ''}`
-            }
+            className={`${styles.navItem} ${isDashboardActive ? styles.navActive : ''}`}
           >
             <LayoutDashboard size={18} />
             <span>Dashboard</span>
@@ -46,9 +71,7 @@ export default function DashboardLayout() {
 
           <NavLink
             to="/accounts"
-            className={({ isActive }) =>
-              `${styles.navItem} ${isActive ? styles.navActive : ''}`
-            }
+            className={`${styles.navItem} ${isAccountsActive ? styles.navActive : ''}`}
           >
             <CreditCard size={18} />
             <span>Accounts</span>
@@ -56,9 +79,7 @@ export default function DashboardLayout() {
 
           <NavLink
             to="/transactions"
-            className={({ isActive }) =>
-              `${styles.navItem} ${isActive ? styles.navActive : ''}`
-            }
+            className={`${styles.navItem} ${isTransactionsActive ? styles.navActive : ''}`}
           >
             <ArrowRightLeft size={18} />
             <span>Transactions</span>
@@ -66,9 +87,7 @@ export default function DashboardLayout() {
 
           <NavLink
             to="/transactions/history"
-            className={({ isActive }) =>
-              `${styles.navItem} ${isActive ? styles.navActive : ''}`
-            }
+            className={`${styles.navItem} ${isTransactionHistoryActive ? styles.navActive : ''}`}
           >
             <History size={18} />
             <span>Transaction History</span>
@@ -76,9 +95,7 @@ export default function DashboardLayout() {
 
           <NavLink
             to="/backup-restore"
-            className={({ isActive }) =>
-              `${styles.navItem} ${isActive ? styles.navActive : ''}`
-            }
+            className={`${styles.navItem} ${isBackupRestoreActive ? styles.navActive : ''}`}
           >
             <Database size={18} />
             <span>Save & Restore</span>
@@ -86,7 +103,13 @@ export default function DashboardLayout() {
         </nav>
 
         <div className={styles.sidebarFooter}>
-          <div className={styles.userChip}>
+          <div
+            className={styles.userChip}
+            onClick={() => navigate('/profile')}
+            role="button"
+            tabIndex={0}
+            title="View Profile"
+          >
             <div className={styles.avatar}>{initials}</div>
             <div className={styles.userInfo}>
               <p className={styles.userName}>{displayName}</p>
@@ -97,7 +120,10 @@ export default function DashboardLayout() {
             </div>
           </div>
           <button
-            onClick={handleLogout}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleLogout();
+            }}
             className={styles.logoutBtn}
             title="Sign out"
           >

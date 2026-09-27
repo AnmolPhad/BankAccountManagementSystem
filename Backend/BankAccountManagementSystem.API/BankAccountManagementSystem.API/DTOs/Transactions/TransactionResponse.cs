@@ -74,5 +74,30 @@ namespace BankAccountManagementSystem.API.DTOs.Transactions
         /// Transaction outcome (Completed or Failed).
         /// </summary>
         public string Status { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Full name of the sender for transfer transactions.
+        /// </summary>
+        public string? SenderName { get; set; }
+
+        /// <summary>
+        /// Full name of the receiver for transfer transactions.
+        /// </summary>
+        public string? ReceiverName { get; set; }
+
+        /// <summary>
+        /// Account number of the sender for transfer transactions.
+        /// </summary>
+        public string? SenderAccountNumber { get; set; }
+
+        /// <summary>
+        /// Account number of the receiver for transfer transactions.
+        /// </summary>
+        public string? ReceiverAccountNumber { get; set; }
+
+        /// <summary>
+        /// True if this transfer is between two accounts owned by the same customer.
+        /// </summary>
+        public bool IsSelfTransfer { get; set; }
     }
 }

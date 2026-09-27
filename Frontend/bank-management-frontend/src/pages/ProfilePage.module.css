@@ -1,0 +1,376 @@
+/* ProfilePage Module Styles */
+
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+  padding-bottom: 3rem;
+}
+
+/* Top Navigation Header */
+.topHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #334155;
+  padding-bottom: 1.25rem;
+}
+
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 0.25rem 0;
+  letter-spacing: -0.02em;
+}
+
+.pageSubtitle {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.backBtn,
+.backBtnLarge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  color: #f8fafc;
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backBtn:hover,
+.backBtnLarge:hover {
+  background-color: #2563eb;
+  border-color: #3b82f6;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.backBtnLarge {
+  padding: 0.75rem 1.5rem;
+}
+
+.bottomNavRow {
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 1rem;
+}
+
+/* Error & Loading */
+.errorBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+  padding: 0.875rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.retryBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background-color: #ef4444;
+  color: #ffffff;
+  border: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.loadingBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  color: #94a3b8;
+  gap: 1rem;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Layout Grid */
+.profileLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Section Card Base */
+.cardSection {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+/* 1. Profile Card */
+.profileCardContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+.avatarCircle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+}
+
+.profileCardName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.5rem 0;
+}
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  padding: 0.3rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Section Headers */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.sectionHeaderBetween {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.sectionHeaderIcon {
+  color: #60a5fa;
+}
+
+.sectionTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+/* Info Rows Grid */
+.infoGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0;
+  border-bottom: 1px dashed #334155;
+}
+
+.infoRow:last-child {
+  border-bottom: none;
+}
+
+.infoLabel {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.infoValue {
+  font-size: 0.925rem;
+  color: #f8fafc;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.inlineIcon {
+  color: #64748b;
+}
+
+/* Read-Only Formatting */
+.readOnlyValueWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.readOnlyText {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.925rem;
+  font-weight: 600;
+  color: #38bdf8;
+  background-color: rgba(15, 23, 42, 0.6);
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #334155;
+}
+
+.readOnlyTag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #94a3b8;
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.readOnlySectionBadge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #38bdf8;
+  background-color: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 0.25rem 0.65rem;
+  border-radius: 12px;
+  letter-spacing: 0.05em;
+}
+
+/* Accounts Table */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  color: #64748b;
+  gap: 0.5rem;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.accountsTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.accountsTable th {
+  background-color: #0f172a;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #334155;
+}
+
+.accountsTable td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #334155;
+  font-size: 0.9rem;
+  color: #f8fafc;
+}
+
+.accountsTable tr:last-child td {
+  border-bottom: none;
+}
+
+.accountNumberCell {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-weight: 700;
+}
+
+.accountNumberText {
+  color: #38bdf8;
+  letter-spacing: 0.05em;
+}
+
+.typeBadge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.savingsBadge {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.checkingBadge {
+  background-color: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(192, 132, 252, 0.3);
+}
+
+.balanceCell {
+  font-weight: 700;
+  color: #10b981;
+}
+
+.activeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #34d399;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.inactiveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #f87171;
+  font-size: 0.8rem;
+  font-weight: 600;
+}

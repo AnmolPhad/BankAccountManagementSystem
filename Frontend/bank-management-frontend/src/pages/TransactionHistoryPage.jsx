@@ -198,6 +198,7 @@ export default function TransactionHistoryPage() {
     const type = txn.transactionType;
     const mode = txn.transactionMode;
     const ref = txn.referenceNumber || '';
+    const isSelf = txn.isSelfTransfer;
 
     if (type === 'Deposit') {
       return {
@@ -216,23 +217,15 @@ export default function TransactionHistoryPage() {
         typeLabel: 'Withdrawal (Cash)'
       };
     } else if (type === 'Transfer') {
-      if (ref.endsWith('-DST')) {
-        return {
-          direction: 'Credit / Incoming',
-          badgeClass: styles.creditBadge,
-          sign: '+',
-          amountClass: styles.creditAmount,
-          typeLabel: 'Cheque Transfer (Credit)'
-        };
-      } else {
-        return {
-          direction: 'Debit / Outgoing',
-          badgeClass: styles.debitBadge,
-          sign: '-',
-          amountClass: styles.debitAmount,
-          typeLabel: 'Cheque Transfer (Debit)'
-        };
-      }
+      const isCredit = ref.endsWith('-DST');
+      const baseLabel = isSelf ? 'Cheque Transfer — Self Transfer' : 'Cheque Transfer';
+      return {
+        direction: isCredit ? 'Credit / Incoming' : 'Debit / Outgoing',
+        badgeClass: isCredit ? styles.creditBadge : styles.debitBadge,
+        sign: isCredit ? '+' : '-',
+        amountClass: isCredit ? styles.creditAmount : styles.debitAmount,
+        typeLabel: baseLabel
+      };
     }
 
     return {
@@ -438,6 +431,7 @@ export default function TransactionHistoryPage() {
                   <tr>
                     <th>Date & Time</th>
                     <th>Type</th>
+                    <th>From / To</th>
                     <th>Debit / Credit</th>
                     <th>Amount</th>
                     <th>Reference Number</th>
@@ -447,11 +441,32 @@ export default function TransactionHistoryPage() {
                 <tbody>
                   {transactions.map((txn) => {
                     const dt = getTxnDirectionDetails(txn);
+                    const isTransfer = txn.transactionType === 'Transfer';
+
                     return (
                       <tr key={txn.transactionId}>
                         <td className={styles.dateCell}>{formatDate(txn.transactionDate)}</td>
                         <td>
                           <span className={styles.typeText}>{dt.typeLabel}</span>
+                        </td>
+                        <td>
+                          {isTransfer ? (
+                            <div className={styles.partyBox}>
+                              {txn.isSelfTransfer && (
+                                <span className={styles.selfTransferBadge}>Self Transfer</span>
+                              )}
+                              <div className={styles.partyRow}>
+                                <span className={styles.partyLabel}>From:</span>
+                                <span className={styles.partyName}>{txn.senderName || 'N/A'}</span>
+                              </div>
+                              <div className={styles.partyRow}>
+                                <span className={styles.partyLabel}>To:</span>
+                                <span className={styles.partyName}>{txn.receiverName || 'N/A'}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <span style={{ color: '#64748b' }}>-</span>
+                          )}
                         </td>
                         <td>
                           <span className={`${styles.directionBadge} ${dt.badgeClass}`}>

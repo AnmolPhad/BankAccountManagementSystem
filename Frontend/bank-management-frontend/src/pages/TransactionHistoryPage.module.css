@@ -626,6 +626,45 @@
   white-space: nowrap;
 }
 
+.partyBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+}
+
+.partyRow {
+  color: #e2e8f0;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.partyLabel {
+  color: #94a3b8;
+  font-weight: 500;
+  margin-right: 0.3rem;
+}
+
+.partyName {
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.selfTransferBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.725rem;
+  font-weight: 600;
+  width: fit-content;
+  margin-bottom: 0.15rem;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .optionsContainer {

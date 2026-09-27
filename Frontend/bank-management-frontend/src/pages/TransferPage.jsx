@@ -1,19 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
-  LayoutDashboard, LogOut, Building2, ShieldCheck,
-  CreditCard, ArrowLeft, ArrowRightLeft, CheckCircle2,
+  ArrowLeft, ArrowRightLeft, CheckCircle2,
   Loader2, AlertCircle, AlertTriangle, PlusCircle
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
 import accountService from '../services/accountService';
 import transactionService from '../services/transactionService';
 import styles from './TransferPage.module.css';
 
 export default function TransferPage() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
   const [accounts, setAccounts] = useState([]);
   const [sourceAccountId, setSourceAccountId] = useState('');
   const [destinationAccountNumber, setDestinationAccountNumber] = useState('');
@@ -93,7 +88,7 @@ export default function TransferPage() {
     }
 
     if (numAmount > (sourceAccount.balance || 0)) {
-      setError(`Insufficient funds. Source account balance is $${(sourceAccount.balance || 0).toFixed(2)}.`);
+      setError(`Insufficient funds. Source account balance is ₹${(sourceAccount.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}.`);
       return;
     }
 
@@ -148,307 +143,251 @@ export default function TransferPage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login', { replace: true });
-  };
-
-  const displayName = user
-    ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email
-    : 'User';
-
-  const initials = user
-    ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() || 'U'
-    : 'U';
-
   return (
-    <div className={styles.root}>
+    <div className={styles.pageContent}>
 
-      {/* ── Sidebar ──────────────────────────────────────────── */}
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarLogo}>
-          <div className={styles.logoIcon}><Building2 size={22} /></div>
-          <span className={styles.logoText}>NexaBank</span>
-        </div>
+      <Link to="/transactions" className={styles.backLink}>
+        <ArrowLeft size={16} /> Back to Transactions
+      </Link>
 
-        <nav className={styles.nav}>
-          <Link to="/dashboard" className={styles.navItem}>
-            <LayoutDashboard size={18} />
-            <span>Dashboard</span>
-          </Link>
-          <Link to="/accounts" className={styles.navItem}>
-            <CreditCard size={18} />
-            <span>Accounts</span>
-          </Link>
-          <Link to="/transactions" className={`${styles.navItem} ${styles.navActive}`}>
-            <ArrowRightLeft size={18} />
-            <span>Transactions</span>
-          </Link>
-        </nav>
+      {result ? (
+        /* ── Success Screen ────────────────────────────────────────── */
+        <div className={styles.successCard}>
+          <div className={styles.successIcon}><CheckCircle2 size={40} /></div>
+          <h2 className={styles.successTitle}>Cheque Transfer Completed!</h2>
+          <p className={styles.successBody}>{result.message}</p>
 
-        <div className={styles.sidebarFooter}>
-          <div className={styles.userChip}>
-            <div className={styles.avatar}>{initials}</div>
-            <div className={styles.userInfo}>
-              <p className={styles.userName}>{displayName}</p>
-              <p className={styles.userRole}>
-                <ShieldCheck size={11} />
-                {user?.role ?? 'User'}
-              </p>
+          <div className={styles.detailsBox}>
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>Reference Number</span>
+              <span className={styles.detailValue}>
+                {result.sourceTransaction?.referenceNumber || 'N/A'}
+              </span>
+            </div>
+
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>Transfer Amount</span>
+              <span className={styles.detailValue} style={{ color: '#3b82f6' }}>
+                ₹{(result.sourceTransaction?.amount ?? Number(amount)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+
+            {sourceAccount && (
+              <div className={styles.detailRow}>
+                <span className={styles.detailLabel}>From Source Account</span>
+                <span className={styles.detailValue}>{sourceAccount.accountNumber} (Checking)</span>
+              </div>
+            )}
+
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>To Destination Account</span>
+              <span className={styles.detailValue}>{result.destinationAccountNumber}</span>
             </div>
           </div>
-          <button onClick={handleLogout} className={styles.logoutBtn} title="Sign out">
-            <LogOut size={16} />
-          </button>
+
+          <div className={styles.actionGroup}>
+            <Link to="/accounts" className={styles.viewBtn}>
+              View Accounts
+            </Link>
+            <button
+              onClick={() => {
+                setResult(null);
+                setDestinationAccountNumber('');
+                setAmount('');
+                setDescription('');
+              }}
+              className={styles.anotherBtn}
+            >
+              <PlusCircle size={16} /> Make Another Transfer
+            </button>
+          </div>
         </div>
-      </aside>
+      ) : (
+        /* ── Transfer Form ─────────────────────────────────────────── */
+        <>
+          <div className={styles.pageHeader}>
+            <h1 className={styles.pageTitle}>Cheque Transfer</h1>
+            <p className={styles.pageSubtitle}>
+              Transfer funds from a Checking account to any destination account.
+            </p>
+          </div>
 
-      {/* ── Main content ─────────────────────────────────────── */}
-      <main className={styles.main}>
+          {error && (
+            <div className={styles.errorBanner} role="alert">
+              <AlertCircle size={16} />
+              <span>{error}</span>
+            </div>
+          )}
 
-        <Link to="/transactions" className={styles.backLink}>
-          <ArrowLeft size={16} /> Back to Transactions
-        </Link>
+          {warningMsg && (
+            <div className={styles.warningBanner} role="alert">
+              <AlertTriangle size={16} />
+              <span>{warningMsg}</span>
+            </div>
+          )}
 
-        {result ? (
-          /* ── Success Screen ────────────────────────────────────────── */
-          <div className={styles.successCard}>
-            <div className={styles.successIcon}><CheckCircle2 size={40} /></div>
-            <h2 className={styles.successTitle}>Cheque Transfer Completed!</h2>
-            <p className={styles.successBody}>{result.message}</p>
+          {loadingAccounts ? (
+            <div className={styles.loadingContainer}>
+              <Loader2 size={32} className={styles.spinner} />
+              <p>Loading your bank accounts…</p>
+            </div>
+          ) : accounts.length === 0 ? (
+            <div className={styles.errorBanner} role="alert">
+              <AlertCircle size={16} />
+              <span>You do not have any open bank accounts. Please open an account first.</span>
+            </div>
+          ) : (
+            <form onSubmit={handleInitiateClick} className={styles.formCard}>
 
-            <div className={styles.detailsBox}>
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Reference Number</span>
-                <span className={styles.detailValue}>
-                  {result.sourceTransaction?.referenceNumber || 'N/A'}
-                </span>
+              {/* Source Account Selector */}
+              <div className={styles.fieldGroup}>
+                <label htmlFor="sourceAccountId" className={styles.label}>Select Source Account (Checking Only)</label>
+                <select
+                  id="sourceAccountId"
+                  value={sourceAccountId}
+                  onChange={(e) => setSourceAccountId(e.target.value)}
+                  className={styles.select}
+                  disabled={loading}
+                >
+                  {accounts.map((acc) => (
+                    <option key={acc.accountId} value={acc.accountId}>
+                      {acc.accountNumber} ({acc.accountType}) — ₹{(acc.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Transfer Amount</span>
-                <span className={styles.detailValue} style={{ color: '#3b82f6' }}>
-                  ${(result.sourceTransaction?.amount ?? Number(amount)).toFixed(2)}
-                </span>
-              </div>
-
+              {/* Selected Source Account Card */}
               {sourceAccount && (
-                <div className={styles.detailRow}>
-                  <span className={styles.detailLabel}>From Source Account</span>
-                  <span className={styles.detailValue}>{sourceAccount.accountNumber} (Checking)</span>
+                <div className={styles.selectedAccountCard}>
+                  <div className={styles.accountMeta}>
+                    <span className={styles.accountNum}>{sourceAccount.accountNumber}</span>
+                    <span className={styles.accountType}>{sourceAccount.accountType} Account</span>
+                  </div>
+                  <div className={styles.accountBalance}>
+                    <span className={styles.balLabel}>Available Balance</span>
+                    <span className={styles.balAmount}>₹{(sourceAccount.balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                  </div>
                 </div>
               )}
 
-              <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>To Destination Account</span>
-                <span className={styles.detailValue}>{result.destinationAccountNumber}</span>
+              {/* Destination Account Number */}
+              <div className={styles.fieldGroup}>
+                <label htmlFor="destinationAccountNumber" className={styles.label}>Destination Account Number</label>
+                <input
+                  id="destinationAccountNumber"
+                  type="text"
+                  placeholder="e.g. 1095416885 or 2021477643"
+                  value={destinationAccountNumber}
+                  onChange={(e) => setDestinationAccountNumber(e.target.value)}
+                  className={styles.input}
+                  disabled={loading || isSavingsSource}
+                  required
+                />
               </div>
-            </div>
 
-            <div className={styles.actionGroup}>
-              <Link to="/accounts" className={styles.viewBtn}>
-                View Accounts
-              </Link>
+              {/* Amount */}
+              <div className={styles.fieldGroup}>
+                <label htmlFor="amount" className={styles.label}>Transfer Amount (₹)</label>
+                <input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className={styles.input}
+                  disabled={loading || isSavingsSource}
+                  required
+                />
+              </div>
+
+              {/* Description */}
+              <div className={styles.fieldGroup}>
+                <label htmlFor="description" className={styles.label}>Description / Reference Note (optional)</label>
+                <input
+                  id="description"
+                  type="text"
+                  maxLength={500}
+                  placeholder="e.g. Rent payment, Invoice #1042"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className={styles.input}
+                  disabled={loading || isSavingsSource}
+                />
+              </div>
+
               <button
-                onClick={() => {
-                  setResult(null);
-                  setDestinationAccountNumber('');
-                  setAmount('');
-                  setDescription('');
-                }}
-                className={styles.anotherBtn}
+                type="submit"
+                className={styles.submitBtn}
+                disabled={loading || isSavingsSource}
               >
-                <PlusCircle size={16} /> Make Another Transfer
+                {loading ? (
+                  <><Loader2 size={18} className={styles.spinner} /> Processing Transfer…</>
+                ) : (
+                  <><ArrowRightLeft size={18} /> Initiate Cheque Transfer</>
+                )}
               </button>
-            </div>
-          </div>
-        ) : (
-          /* ── Transfer Form ─────────────────────────────────────────── */
-          <>
-            <div className={styles.pageHeader}>
-              <h1 className={styles.pageTitle}>Cheque Transfer</h1>
-              <p className={styles.pageSubtitle}>
-                Transfer funds from a Checking account to any destination account.
-              </p>
-            </div>
+            </form>
+          )}
 
-            {error && (
-              <div className={styles.errorBanner} role="alert">
-                <AlertCircle size={16} />
-                <span>{error}</span>
-              </div>
-            )}
+          {/* Confirmation Modal */}
+          {showConfirmModal && (
+            <div className={styles.modalOverlay} role="dialog" aria-modal="true">
+              <div className={styles.modalCard}>
+                <div className={styles.modalWarnIcon}><AlertTriangle size={28} /></div>
+                <h3 className={styles.modalTitle}>Confirm Cheque Transfer</h3>
+                <p className={styles.modalBody}>
+                  Please review your cheque transfer details before confirming:
+                </p>
 
-            {warningMsg && (
-              <div className={styles.warningBanner} role="alert">
-                <AlertTriangle size={16} />
-                <span>{warningMsg}</span>
-              </div>
-            )}
+                <div className={styles.modalSummary}>
+                  <div className={styles.summaryRow}>
+                    <span className={styles.summaryLabel}>From Checking Account:</span>
+                    <span className={styles.summaryVal}>{sourceAccount?.accountNumber}</span>
+                  </div>
+                  <div className={styles.summaryRow}>
+                    <span className={styles.summaryLabel}>To Destination Account:</span>
+                    <span className={styles.summaryVal}>{destinationAccountNumber}</span>
+                  </div>
+                  <div className={styles.summaryRow}>
+                    <span className={styles.summaryLabel}>Transfer Amount:</span>
+                    <span className={styles.summaryVal} style={{ color: '#60a5fa' }}>
+                      ₹{Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  {description && (
+                    <div className={styles.summaryRow}>
+                      <span className={styles.summaryLabel}>Note:</span>
+                      <span className={styles.summaryVal}>{description}</span>
+                    </div>
+                  )}
+                </div>
 
-            {loadingAccounts ? (
-              <div className={styles.loadingContainer}>
-                <Loader2 size={32} className={styles.spinner} />
-                <p>Loading your bank accounts…</p>
-              </div>
-            ) : accounts.length === 0 ? (
-              <div className={styles.errorBanner} role="alert">
-                <AlertCircle size={16} />
-                <span>You do not have any open bank accounts. Please open an account first.</span>
-              </div>
-            ) : (
-              <form onSubmit={handleInitiateClick} className={styles.formCard}>
-
-                {/* Source Account Selector */}
-                <div className={styles.fieldGroup}>
-                  <label htmlFor="sourceAccountId" className={styles.label}>Select Source Account (Checking Only)</label>
-                  <select
-                    id="sourceAccountId"
-                    value={sourceAccountId}
-                    onChange={(e) => setSourceAccountId(e.target.value)}
-                    className={styles.select}
+                <div className={styles.modalActions}>
+                  <button
+                    onClick={() => setShowConfirmModal(false)}
+                    className={styles.cancelBtn}
                     disabled={loading}
                   >
-                    {accounts.map((acc) => (
-                      <option key={acc.accountId} value={acc.accountId}>
-                        {acc.accountNumber} ({acc.accountType}) — ${(acc.balance || 0).toFixed(2)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Selected Source Account Card */}
-                {sourceAccount && (
-                  <div className={styles.selectedAccountCard}>
-                    <div className={styles.accountMeta}>
-                      <span className={styles.accountNum}>{sourceAccount.accountNumber}</span>
-                      <span className={styles.accountType}>{sourceAccount.accountType} Account</span>
-                    </div>
-                    <div className={styles.accountBalance}>
-                      <span className={styles.balLabel}>Available Balance</span>
-                      <span className={styles.balAmount}>${(sourceAccount.balance || 0).toFixed(2)}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Destination Account Number */}
-                <div className={styles.fieldGroup}>
-                  <label htmlFor="destinationAccountNumber" className={styles.label}>Destination Account Number</label>
-                  <input
-                    id="destinationAccountNumber"
-                    type="text"
-                    placeholder="e.g. 1095416885 or 2021477643"
-                    value={destinationAccountNumber}
-                    onChange={(e) => setDestinationAccountNumber(e.target.value)}
-                    className={styles.input}
-                    disabled={loading || isSavingsSource}
-                    required
-                  />
-                </div>
-
-                {/* Amount */}
-                <div className={styles.fieldGroup}>
-                  <label htmlFor="amount" className={styles.label}>Transfer Amount ($)</label>
-                  <input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    placeholder="0.00"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className={styles.input}
-                    disabled={loading || isSavingsSource}
-                    required
-                  />
-                </div>
-
-                {/* Description */}
-                <div className={styles.fieldGroup}>
-                  <label htmlFor="description" className={styles.label}>Description / Reference Note (optional)</label>
-                  <input
-                    id="description"
-                    type="text"
-                    maxLength={500}
-                    placeholder="e.g. Rent payment, Invoice #1042"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className={styles.input}
-                    disabled={loading || isSavingsSource}
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className={styles.submitBtn}
-                  disabled={loading || isSavingsSource}
-                >
-                  {loading ? (
-                    <><Loader2 size={18} className={styles.spinner} /> Processing Transfer…</>
-                  ) : (
-                    <><ArrowRightLeft size={18} /> Initiate Cheque Transfer</>
-                  )}
-                </button>
-              </form>
-            )}
-
-            {/* Confirmation Modal */}
-            {showConfirmModal && (
-              <div className={styles.modalOverlay} role="dialog" aria-modal="true">
-                <div className={styles.modalCard}>
-                  <div className={styles.modalWarnIcon}><AlertTriangle size={28} /></div>
-                  <h3 className={styles.modalTitle}>Confirm Cheque Transfer</h3>
-                  <p className={styles.modalBody}>
-                    Please review your cheque transfer details before confirming:
-                  </p>
-
-                  <div className={styles.modalSummary}>
-                    <div className={styles.summaryRow}>
-                      <span className={styles.summaryLabel}>From Checking Account:</span>
-                      <span className={styles.summaryVal}>{sourceAccount?.accountNumber}</span>
-                    </div>
-                    <div className={styles.summaryRow}>
-                      <span className={styles.summaryLabel}>To Destination Account:</span>
-                      <span className={styles.summaryVal}>{destinationAccountNumber}</span>
-                    </div>
-                    <div className={styles.summaryRow}>
-                      <span className={styles.summaryLabel}>Transfer Amount:</span>
-                      <span className={styles.summaryVal} style={{ color: '#60a5fa' }}>
-                        ${Number(amount).toFixed(2)}
-                      </span>
-                    </div>
-                    {description && (
-                      <div className={styles.summaryRow}>
-                        <span className={styles.summaryLabel}>Note:</span>
-                        <span className={styles.summaryVal}>{description}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className={styles.modalActions}>
-                    <button
-                      onClick={() => setShowConfirmModal(false)}
-                      className={styles.cancelBtn}
-                      disabled={loading}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={confirmAndExecuteTransfer}
-                      className={styles.confirmBtn}
-                      disabled={loading}
-                    >
-                      {loading ? <Loader2 size={16} className={styles.spinner} /> : <ArrowRightLeft size={16} />}
-                      Confirm Transfer
-                    </button>
-                  </div>
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmAndExecuteTransfer}
+                    className={styles.confirmBtn}
+                    disabled={loading}
+                  >
+                    {loading ? <Loader2 size={16} className={styles.spinner} /> : <ArrowRightLeft size={16} />}
+                    Confirm Transfer
+                  </button>
                 </div>
               </div>
-            )}
-          </>
-        )}
+            </div>
+          )}
+        </>
+      )}
 
-      </main>
     </div>
   );
 }
