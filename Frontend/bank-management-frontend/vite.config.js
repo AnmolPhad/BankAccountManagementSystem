@@ -10,9 +10,9 @@ export default defineConfig({
     // This avoids CORS and certificate issues when running `npm run dev`.
     proxy: {
       '/api': {
-        target: 'https://localhost:7225',
+        target: 'http://localhost:5121',
         changeOrigin: true,
-        secure: false,   // Allow self-signed dev cert
+        secure: false,
       },
     },
   },

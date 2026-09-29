@@ -1,0 +1,2274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bank Account Management System (BAMS) — Consolidated Low-Level Design (LLD)</title>
+<style>
+@page {
+  size: letter;
+  margin: 18mm 16mm 18mm 16mm;
+  @bottom-center {
+    content: counter(page);
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 10pt;
+  }
+}
+*, *:before, *:after {
+  box-sizing: border-box;
+}
+body {
+  font-family: 'Times New Roman', Times, 'Latin Modern Roman', Georgia, serif;
+  font-size: 10pt;
+  line-height: 1.34;
+  color: #111;
+  margin: 0;
+  padding: 0;
+}
+.cover-header {
+  text-align: center;
+  margin-top: 8mm;
+  margin-bottom: 14mm;
+}
+.cover-title {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 17pt;
+  font-weight: bold;
+  letter-spacing: -0.2px;
+  margin-bottom: 6pt;
+}
+.cover-subtitle {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 10.5pt;
+  color: #222;
+  margin-bottom: 14pt;
+}
+.cover-team {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 11pt;
+  margin-bottom: 3pt;
+}
+.cover-date {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 10pt;
+  color: #333;
+}
+.toc-container {
+  margin-top: 12pt;
+  margin-bottom: 20pt;
+}
+.toc-heading {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13pt;
+  font-weight: bold;
+  margin-bottom: 10pt;
+}
+.toc-row-h1 {
+  display: flex;
+  align-items: baseline;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 9.3pt;
+  font-weight: bold;
+  margin-top: 4pt;
+  margin-bottom: 1.5pt;
+}
+.toc-row-h2 {
+  display: flex;
+  align-items: baseline;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 8.8pt;
+  font-weight: normal;
+  padding-left: 14pt;
+  margin-top: 1pt;
+  margin-bottom: 1pt;
+}
+.toc-text {
+  flex-shrink: 0;
+}
+.toc-leader {
+  flex-grow: 1;
+  border-bottom: 1px dotted #555;
+  margin: 0 5pt;
+  height: 0.8em;
+}
+.toc-page {
+  flex-shrink: 0;
+  font-family: 'Times New Roman', Times, serif;
+}
+h1 {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 12pt;
+  font-weight: bold;
+  margin-top: 16pt;
+  margin-bottom: 5pt;
+  page-break-after: avoid;
+}
+h2 {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 10.3pt;
+  font-weight: bold;
+  margin-top: 11pt;
+  margin-bottom: 3pt;
+  page-break-after: avoid;
+}
+h3 {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 9.6pt;
+  font-weight: bold;
+  margin-top: 8pt;
+  margin-bottom: 2pt;
+  page-break-after: avoid;
+}
+p {
+  margin-top: 0;
+  margin-bottom: 5pt;
+  text-align: justify;
+}
+ul, ol {
+  margin-top: 2pt;
+  margin-bottom: 5pt;
+  padding-left: 18pt;
+}
+li {
+  margin-bottom: 2pt;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 7pt 0 10pt 0;
+  font-size: 8.6pt;
+  line-height: 1.25;
+  page-break-inside: avoid;
+}
+th {
+  border-top: 1.4pt solid #000;
+  border-bottom: 0.8pt solid #000;
+  text-align: left;
+  padding: 3.5pt 4.5pt;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-weight: bold;
+}
+td {
+  border-bottom: 0.4pt solid #e0e0e0;
+  padding: 3.5pt 4.5pt;
+  vertical-align: top;
+}
+tr.last-row td, table tbody tr:last-child td {
+  border-bottom: 1.4pt solid #000;
+}
+pre {
+  font-family: 'Consolas', 'Courier New', Courier, monospace;
+  font-size: 7.8pt;
+  line-height: 1.2;
+  background-color: #fafafa;
+  border: 0.5pt solid #d4d4d4;
+  padding: 5pt 7pt;
+  margin: 5pt 0 7pt 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  page-break-inside: avoid;
+}
+code {
+  font-family: 'Consolas', 'Courier New', Courier, monospace;
+  font-size: 8.5pt;
+  background-color: #f3f3f3;
+  padding: 0.5pt 2.5pt;
+}
+.page-break {
+  page-break-after: always;
+}
+.checklist-item {
+  margin: 2pt 0;
+  padding-left: 2pt;
+}
+.callout {
+  border-left: 2pt solid #000;
+  background: #fdfdfd;
+  padding: 4pt 8pt;
+  margin: 5pt 0;
+  font-style: italic;
+}
+</style>
+</head>
+<body>
+
+<div class="cover-header">
+  <div class="cover-title">Bank Account Management System (BAMS)</div>
+  <div class="cover-subtitle">Consolidated Low-Level Design (LLD) &mdash; Implementation Contract for AI-Assisted Development</div>
+  <div class="cover-team">BAMS Engineering Team</div>
+  <div class="cover-date">September 2026</div>
+</div>
+
+<div class="toc-container">
+  <div class="toc-heading">Contents</div>
+  <div class="toc-row-h1"><span class="toc-text">1 Document Purpose &amp; Consolidation Note</span><span class="toc-leader"></span><span class="toc-page">3</span></div>
+  <div class="toc-row-h1"><span class="toc-text">2 AI Coding Execution Contract</span><span class="toc-leader"></span><span class="toc-page">3</span></div>
+  <div class="toc-row-h1"><span class="toc-text">3 Software Development Life Cycle (SDLC) Model</span><span class="toc-leader"></span><span class="toc-page">4</span></div>
+  <div class="toc-row-h2"><span class="toc-text">3.1 Model Selected: Waterfall</span><span class="toc-leader"></span><span class="toc-page">4</span></div>
+  <div class="toc-row-h2"><span class="toc-text">3.2 Why Waterfall Is Suitable Here</span><span class="toc-leader"></span><span class="toc-page">4</span></div>
+  <div class="toc-row-h2"><span class="toc-text">3.3 Waterfall Phases Mapped to This Document</span><span class="toc-leader"></span><span class="toc-page">5</span></div>
+  <div class="toc-row-h1"><span class="toc-text">4 Technology Stack</span><span class="toc-leader"></span><span class="toc-page">5</span></div>
+  <div class="toc-row-h1"><span class="toc-text">5 Architecture</span><span class="toc-leader"></span><span class="toc-page">6</span></div>
+  <div class="toc-row-h2"><span class="toc-text">5.1 Style</span><span class="toc-leader"></span><span class="toc-page">6</span></div>
+  <div class="toc-row-h2"><span class="toc-text">5.2 Request Flow</span><span class="toc-leader"></span><span class="toc-page">6</span></div>
+  <div class="toc-row-h2"><span class="toc-text">5.3 Module Boundaries</span><span class="toc-leader"></span><span class="toc-page">7</span></div>
+  <div class="toc-row-h1"><span class="toc-text">6 Solution / Project Structure</span><span class="toc-leader"></span><span class="toc-page">7</span></div>
+  <div class="toc-row-h1"><span class="toc-text">7 Complete Frontend Specification</span><span class="toc-leader"></span><span class="toc-page">8</span></div>
+  <div class="toc-row-h2"><span class="toc-text">7.1 Full Page List by Role</span><span class="toc-leader"></span><span class="toc-page">8</span></div>
+  <div class="toc-row-h2"><span class="toc-text">7.2 Route-to-Role Visibility</span><span class="toc-leader"></span><span class="toc-page">9</span></div>
+  <div class="toc-row-h1"><span class="toc-text">8 Domain Entities (Exact Fields)</span><span class="toc-leader"></span><span class="toc-page">10</span></div>
+  <div class="toc-row-h2"><span class="toc-text">8.1 Account</span><span class="toc-leader"></span><span class="toc-page">10</span></div>
+  <div class="toc-row-h2"><span class="toc-text">8.2 Transaction</span><span class="toc-leader"></span><span class="toc-page">11</span></div>
+  <div class="toc-row-h2"><span class="toc-text">8.3 ApplicationUser / Identity Core</span><span class="toc-leader"></span><span class="toc-page">11</span></div>
+  <div class="toc-row-h2"><span class="toc-text">8.4 Domain Enumerations</span><span class="toc-leader"></span><span class="toc-page">11</span></div>
+  <div class="toc-row-h1"><span class="toc-text">9 Database Design &mdash; Indexes &amp; Constraints (SQL Server)</span><span class="toc-leader"></span><span class="toc-page">12</span></div>
+  <div class="toc-row-h1"><span class="toc-text">10 RBAC &mdash; Roles, Permissions &amp; Enforcement</span><span class="toc-leader"></span><span class="toc-page">13</span></div>
+  <div class="toc-row-h2"><span class="toc-text">10.1 Roles</span><span class="toc-leader"></span><span class="toc-page">13</span></div>
+  <div class="toc-row-h2"><span class="toc-text">10.2 Seed Permissions by Role</span><span class="toc-leader"></span><span class="toc-page">13</span></div>
+  <div class="toc-row-h2"><span class="toc-text">10.3 Policy Registration (Program.cs)</span><span class="toc-leader"></span><span class="toc-page">13</span></div>
+  <div class="toc-row-h2"><span class="toc-text">10.4 Full Authorization Matrix</span><span class="toc-leader"></span><span class="toc-page">14</span></div>
+  <div class="toc-row-h1"><span class="toc-text">11 Frontend &harr; Backend Permission Mapping</span><span class="toc-leader"></span><span class="toc-page">14</span></div>
+  <div class="toc-row-h1"><span class="toc-text">12 Database Seed Data</span><span class="toc-leader"></span><span class="toc-page">15</span></div>
+  <div class="toc-row-h2"><span class="toc-text">12.1 Roles</span><span class="toc-leader"></span><span class="toc-page">15</span></div>
+  <div class="toc-row-h2"><span class="toc-text">12.2 Default Administrator Account</span><span class="toc-leader"></span><span class="toc-page">15</span></div>
+  <div class="toc-row-h2"><span class="toc-text">12.3 Reference Data</span><span class="toc-leader"></span><span class="toc-page">15</span></div>
+  <div class="toc-row-h1"><span class="toc-text">13 Authentication &mdash; JWT Contract</span><span class="toc-leader"></span><span class="toc-page">16</span></div>
+  <div class="toc-row-h2"><span class="toc-text">13.1 Claims in the Access Token</span><span class="toc-leader"></span><span class="toc-page">16</span></div>
+  <div class="toc-row-h2"><span class="toc-text">13.2 Endpoints</span><span class="toc-leader"></span><span class="toc-page">16</span></div>
+  <div class="toc-row-h2"><span class="toc-text">13.3 Password Policy &amp; Lockout</span><span class="toc-leader"></span><span class="toc-page">16</span></div>
+  <div class="toc-row-h2"><span class="toc-text">13.4 Middleware Pipeline Order (Program.cs)</span><span class="toc-leader"></span><span class="toc-page">17</span></div>
+  <div class="toc-row-h1"><span class="toc-text">14 Configuration &amp; Environment Variables</span><span class="toc-leader"></span><span class="toc-page">17</span></div>
+  <div class="toc-row-h2"><span class="toc-text">14.1 Backend (appsettings.json)</span><span class="toc-leader"></span><span class="toc-page">17</span></div>
+  <div class="toc-row-h2"><span class="toc-text">14.2 Frontend (Vite Environment Variables)</span><span class="toc-leader"></span><span class="toc-page">17</span></div>
+  <div class="toc-row-h2"><span class="toc-text">14.3 Configuration Files Required</span><span class="toc-leader"></span><span class="toc-page">18</span></div>
+  <div class="toc-row-h1"><span class="toc-text">15 API Contract (Representative Endpoints)</span><span class="toc-leader"></span><span class="toc-page">18</span></div>
+  <div class="toc-row-h2"><span class="toc-text">15.1 Authentication</span><span class="toc-leader"></span><span class="toc-page">18</span></div>
+  <div class="toc-row-h2"><span class="toc-text">15.2 Bank Accounts</span><span class="toc-leader"></span><span class="toc-page">18</span></div>
+  <div class="toc-row-h2"><span class="toc-text">15.3 Transactions</span><span class="toc-leader"></span><span class="toc-page">19</span></div>
+  <div class="toc-row-h2"><span class="toc-text">15.4 System Save &amp; Restore</span><span class="toc-leader"></span><span class="toc-page">19</span></div>
+  <div class="toc-row-h2"><span class="toc-text">15.5 Error Responses (All Endpoints)</span><span class="toc-leader"></span><span class="toc-page">19</span></div>
+  <div class="toc-row-h1"><span class="toc-text">16 API Request &amp; Response Examples</span><span class="toc-leader"></span><span class="toc-page">20</span></div>
+  <div class="toc-row-h1"><span class="toc-text">17 Repository / Service Interfaces &amp; DTOs</span><span class="toc-leader"></span><span class="toc-page">22</span></div>
+  <div class="toc-row-h2"><span class="toc-text">17.1 Service Contracts</span><span class="toc-leader"></span><span class="toc-page">22</span></div>
+  <div class="toc-row-h2"><span class="toc-text">17.2 Example Service Method (TransferAsync: ACID + Concurrency + Logging)</span><span class="toc-leader"></span><span class="toc-page">22</span></div>
+  <div class="toc-row-h2"><span class="toc-text">17.3 ITransactionService</span><span class="toc-leader"></span><span class="toc-page">23</span></div>
+  <div class="toc-row-h2"><span class="toc-text">17.4 Key DTOs</span><span class="toc-leader"></span><span class="toc-page">23</span></div>
+  <div class="toc-row-h1"><span class="toc-text">18 Complete DTO Specification</span><span class="toc-leader"></span><span class="toc-page">24</span></div>
+  <div class="toc-row-h1"><span class="toc-text">19 Financial &amp; Transaction Engine &mdash; Deep Detail</span><span class="toc-leader"></span><span class="toc-page">25</span></div>
+  <div class="toc-row-h2"><span class="toc-text">19.1 Balance &amp; Transaction Formulas</span><span class="toc-leader"></span><span class="toc-page">25</span></div>
+  <div class="toc-row-h2"><span class="toc-text">19.2 Transfer Processing Flow</span><span class="toc-leader"></span><span class="toc-page">26</span></div>
+  <div class="toc-row-h2"><span class="toc-text">19.3 Concurrency Control &amp; RowVersion Mechanics</span><span class="toc-leader"></span><span class="toc-page">26</span></div>
+  <div class="toc-row-h1"><span class="toc-text">20 Structured Logging &amp; Audit Trail</span><span class="toc-leader"></span><span class="toc-page">27</span></div>
+  <div class="toc-row-h2"><span class="toc-text">20.1 Serilog Sinks</span><span class="toc-leader"></span><span class="toc-page">27</span></div>
+  <div class="toc-row-h2"><span class="toc-text">20.2 Canonical Event Names</span><span class="toc-leader"></span><span class="toc-page">27</span></div>
+  <div class="toc-row-h2"><span class="toc-text">20.3 Never Logged</span><span class="toc-leader"></span><span class="toc-page">27</span></div>
+  <div class="toc-row-h2"><span class="toc-text">20.4 Correlation ID Tracing</span><span class="toc-leader"></span><span class="toc-page">27</span></div>
+  <div class="toc-row-h1"><span class="toc-text">21 SOLID Principles &mdash; Implementation Mapping</span><span class="toc-leader"></span><span class="toc-page">28</span></div>
+  <div class="toc-row-h1"><span class="toc-text">22 Design Patterns &mdash; Implementation Mapping</span><span class="toc-leader"></span><span class="toc-page">29</span></div>
+  <div class="toc-row-h2"><span class="toc-text">22.1 OOP Principles Applied</span><span class="toc-leader"></span><span class="toc-page">29</span></div>
+  <div class="toc-row-h1"><span class="toc-text">23 Security, Exception Handling &amp; Production Hardening</span><span class="toc-leader"></span><span class="toc-page">30</span></div>
+  <div class="toc-row-h2"><span class="toc-text">23.1 Exception Handling Contract</span><span class="toc-leader"></span><span class="toc-page">30</span></div>
+  <div class="toc-row-h2"><span class="toc-text">23.2 Security Design</span><span class="toc-leader"></span><span class="toc-page">30</span></div>
+  <div class="toc-row-h2"><span class="toc-text">23.3 Security Testing Checklist</span><span class="toc-leader"></span><span class="toc-page">31</span></div>
+  <div class="toc-row-h2"><span class="toc-text">23.4 Deployment</span><span class="toc-leader"></span><span class="toc-page">31</span></div>
+  <div class="toc-row-h2"><span class="toc-text">23.5 Exact Configuration / Launch Profile</span><span class="toc-leader"></span><span class="toc-page">31</span></div>
+  <div class="toc-row-h2"><span class="toc-text">23.6 Git / Branch / Commit Rules</span><span class="toc-leader"></span><span class="toc-page">32</span></div>
+  <div class="toc-row-h1"><span class="toc-text">24 Testing Matrix</span><span class="toc-leader"></span><span class="toc-page">32</span></div>
+  <div class="toc-row-h1"><span class="toc-text">25 Sample Test Case Table</span><span class="toc-leader"></span><span class="toc-page">33</span></div>
+  <div class="toc-row-h1"><span class="toc-text">26 Required Diagrams</span><span class="toc-leader"></span><span class="toc-page">34</span></div>
+  <div class="toc-row-h1"><span class="toc-text">27 Final Acceptance Criteria</span><span class="toc-leader"></span><span class="toc-page">34</span></div>
+  <div class="toc-row-h1"><span class="toc-text">28 Definition of Done (Per Module)</span><span class="toc-leader"></span><span class="toc-page">35</span></div>
+  <div class="toc-row-h1"><span class="toc-text">29 Build Order &amp; Working Agreement for an AI Coding Tool</span><span class="toc-leader"></span><span class="toc-page">35</span></div>
+  <div class="toc-row-h2"><span class="toc-text">29.1 Build Order (Waterfall-Sequenced)</span><span class="toc-leader"></span><span class="toc-page">35</span></div>
+  <div class="toc-row-h2"><span class="toc-text">29.2 Working Agreement</span><span class="toc-leader"></span><span class="toc-page">36</span></div>
+  <div class="toc-row-h1"><span class="toc-text">30 One-Minute Team Explanation</span><span class="toc-leader"></span><span class="toc-page">36</span></div>
+  <div class="toc-row-h1"><span class="toc-text">31 AI Project Generation Prompt</span><span class="toc-leader"></span><span class="toc-page">36</span></div>
+</div>
+
+<div class="page-break"></div>
+
+<h1>1 Document Purpose &amp; Consolidation Note</h1>
+<p>This is a single, self-contained Low-Level Design (LLD) document for the Bank Account Management System (BAMS). It merges the specifications across Phase 1 (Authentication &amp; User Management), Phase 2 (Account Management &amp; Ownership), Phase 3 (Financial Transactions &amp; Concurrency), Phase 4 (Transaction History &amp; Querying), Phase 5 (System Save &amp; Restore / Backup &amp; Rehydration), and Phase 6 (Production Hardening) into one coherent engineering contract, so it can be handed to an AI coding tool (or an engineer) with the instruction <em>&ldquo;implement exactly this&rdquo;</em> and produce a consistent, working, end-to-end codebase.</p>
+
+<p>Two consolidation decisions were made while merging the source specifications:</p>
+<ol>
+  <li><strong>Single technology stack.</strong> The system standardizes on <strong>ASP.NET Core Web API (C# / .NET 8) + React 18 (Vite) + Microsoft SQL Server + Entity Framework Core 8</strong>. All database DDL, types, and constraints are written in SQL Server dialect (<code>decimal(18,2)</code>, <code>rowversion</code>, <code>datetime2</code>, <code>nvarchar</code>).</li>
+  <li><strong>Implemented items only.</strong> Technologies and architectural patterns flagged as optional or unselected (e.g., Redis distributed caching, SignalR real-time hubs, Razor Pages, microservices, containerization) are omitted or categorized as not implemented to ensure an unambiguous contract for automated development.</li>
+</ol>
+
+<p>This document specifies the AI Coding Execution Contract, a complete frontend page/route specification, field-by-field DTO contracts, database seed data, environment configurations, a Definition of Done checklist, literal request/response examples, frontend-to-backend permission mappings, testing matrices, and a ready-to-copy AI project generation prompt.</p>
+
+<h1>2 AI Coding Execution Contract</h1>
+<p>This section governs how any AI coding tool (or developer) must behave while building the BAMS from this document. It is binding for the entire build:</p>
+<ol>
+  <li><strong>Treat this document as the single source of truth.</strong> If something is not specified here, stop and flag it rather than inventing a convention silently.</li>
+  <li><strong>Do not change technology, architecture, entities, API contracts, roles, permissions, business rules, or database design without explicit approval.</strong></li>
+  <li><strong>Do not generate placeholder implementations.</strong> No <code>TODO</code>, no <code>NotImplementedException</code>, no empty method bodies, no fake in-memory repositories standing in for real ones, no hard-coded mock API responses.</li>
+  <li><strong>Build the project incrementally, following the Build Order (&sect;29.1)</strong> &mdash; one phase at a time, never the whole application in one pass.</li>
+  <li><strong>After completing each phase:</strong>
+    <ul>
+      <li>restore/install dependencies (backend and frontend)</li>
+      <li>compile the backend with 0 errors and 0 warnings</li>
+      <li>build the frontend</li>
+      <li>run the unit and integration tests for that phase</li>
+      <li>verify database migrations apply cleanly against SQL Server</li>
+    </ul>
+  </li>
+  <li><strong>Do not proceed to the next phase if the current phase does not build or does not pass its tests.</strong></li>
+  <li><strong>All backend API responses must use standard DTOs or structured envelopes</strong> &mdash; no endpoint returns a bare internal entity or exposes passwords/hashes.</li>
+  <li><strong>Never expose EF Core entities directly through controllers</strong> &mdash; every request/response crosses the API boundary as a DTO (&sect;17.4, &sect;18).</li>
+  <li><strong>Never bypass authorization</strong> &mdash; every endpoint carries the policy listed for it; no endpoint is left <code>[AllowAnonymous]</code> unless explicitly specified (only <code>/api/v1/auth/register</code> and <code>/api/v1/auth/login</code>).</li>
+  <li><strong>Never put business logic inside controllers</strong> &mdash; controllers route, validate models, and invoke services; balance calculations, account type constraints, and transfer validations live in the Service Layer.</li>
+  <li><strong>Never put database access directly inside controllers or React components</strong> &mdash; controllers depend on service interfaces; React components call centralized API client functions.</li>
+  <li><strong>Use dependency injection according to the architecture</strong> &mdash; all services are constructor-injected and registered with <code>Scoped</code> lifetime in <code>Program.cs</code>.</li>
+  <li><strong>Maintain optimistic concurrency using EF Core RowVersion</strong> on accounts to prevent balance race conditions.</li>
+  <li><strong>Generate all required tests listed in the Testing Matrix (&sect;24)</strong> &mdash; a module is not done without verification.</li>
+  <li><strong>At completion, verify every item in the Final Acceptance Criteria (&sect;27)</strong> before declaring the project finished.</li>
+</ol>
+
+<div class="page-break"></div>
+
+<h1>3 Software Development Life Cycle (SDLC) Model</h1>
+
+<h2>3.1 Model Selected: Waterfall</h2>
+<p>The BAMS project follows the Waterfall SDLC model. Requirements and architecture are completely determined up-front to deliver a secure financial platform:</p>
+<pre>Requirements -> System Design (this LLD) -> Implementation -> Integration & Testing -> Deployment -> Maintenance</pre>
+
+<h2>3.2 Why Waterfall Is Suitable Here</h2>
+<ul>
+  <li><strong>Requirements are fully known and fixed up front.</strong> In banking, ledger accounting rules, cash-only savings constraints, and optimistic concurrency cannot drift mid-development.</li>
+  <li><strong>Linear dependency-ordered build path.</strong> Identity &amp; Auth must exist before Accounts; Accounts must exist before Transactions; Transactions must exist before Querying and Backup/Restore.</li>
+  <li><strong>AI-Assisted single-pass execution.</strong> AI tools perform best against an unambiguous, fully specified contract without renegotiating requirements.</li>
+  <li><strong>Strict acceptance gates.</strong> Financial software requires comprehensive verification against fixed criteria before production sign-off.</li>
+</ul>
+
+<h2>3.3 Waterfall Phases Mapped to This Document</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Phase</th>
+      <th>Waterfall Activity</th>
+      <th>Section of This Document</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1. Requirements</td>
+      <td>Banking business rules, Savings/Checking rules, RBAC</td>
+      <td>&sect;5, &sect;8, &sect;19</td>
+    </tr>
+    <tr>
+      <td>2. System Design</td>
+      <td>Architecture, schema, API contracts, DTOs, Concurrency</td>
+      <td>&sect;4, &sect;6, &sect;7, &sect;9, &sect;10, &sect;13, &sect;15, &sect;18</td>
+    </tr>
+    <tr>
+      <td>3. Implementation</td>
+      <td>Phased build order, service logic, controllers, React SPA</td>
+      <td>&sect;17, &sect;19, &sect;29</td>
+    </tr>
+    <tr>
+      <td>4. Integration &amp; Testing</td>
+      <td>Unit, integration, and security verification</td>
+      <td>&sect;24, &sect;25</td>
+    </tr>
+    <tr>
+      <td>5. Deployment &amp; Hardening</td>
+      <td>Serilog rolling file logs, Correlation IDs, Health checks</td>
+      <td>&sect;20, &sect;23</td>
+    </tr>
+    <tr class="last-row">
+      <td>6. Maintenance</td>
+      <td>System save/restore, backup verification, audit trail</td>
+      <td>&sect;15.4, &sect;20.4</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1>4 Technology Stack</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Layer</th>
+      <th>Technology</th>
+      <th>Usage</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Frontend</td>
+      <td>React 18 + Vite 5, React Router v6, Axios, CSS Modules</td>
+      <td>Single Page Application (SPA), protected routes, auth interceptor</td>
+    </tr>
+    <tr>
+      <td>Backend API</td>
+      <td>ASP.NET Core Web API (.NET 8.0 LTS, C# 12)</td>
+      <td>RESTful API controllers, custom middleware pipeline, DI</td>
+    </tr>
+    <tr>
+      <td>ORM / Data Access</td>
+      <td>Entity Framework Core 8.0.10 (Code-First)</td>
+      <td>LINQ queries, transactions, optimistic concurrency, migrations</td>
+    </tr>
+    <tr>
+      <td>Database</td>
+      <td>Microsoft SQL Server (Express / Developer)</td>
+      <td>Relational store, unique indexes, rowversion concurrency token</td>
+    </tr>
+    <tr>
+      <td>Authentication</td>
+      <td>ASP.NET Core Identity + JWT Bearer (HMAC-SHA256)</td>
+      <td>User credential storage, PBKDF2 hashing, signed access tokens</td>
+    </tr>
+    <tr>
+      <td>Authorization</td>
+      <td>Role-Based + Resource Ownership Validation</td>
+      <td>Admin and User roles, account ownership verification</td>
+    </tr>
+    <tr>
+      <td>Validation</td>
+      <td>Data Annotations + [ApiController] Automatic 400</td>
+      <td>Declarative request model validation, Range, Required</td>
+    </tr>
+    <tr>
+      <td>Logging</td>
+      <td>Serilog (Console + Daily Rolling File Sink)</td>
+      <td>Structured logging to Logs/bams-.log with 30-day retention</td>
+    </tr>
+    <tr>
+      <td>Rate Limiting</td>
+      <td>ASP.NET Core RateLimiter (Fixed Window)</td>
+      <td>10 requests/min per IP partition on /api/v1/auth/login</td>
+    </tr>
+    <tr>
+      <td>Health Checks</td>
+      <td>Microsoft.AspNetCore.Diagnostics.HealthChecks</td>
+      <td>GET /health monitoring API &amp; SQL Server connectivity</td>
+    </tr>
+    <tr class="last-row">
+      <td>API Documentation</td>
+      <td>Swagger / OpenAPI (Swashbuckle.AspNetCore)</td>
+      <td>Interactive API exploration and JWT Bearer authorization UI</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<h1>5 Architecture</h1>
+
+<h2>5.1 Style</h2>
+<p>Clean Layered (N-Tier) Architecture deployed as a modular Web API backend paired with a decoupled React SPA client:</p>
+<table>
+  <thead>
+    <tr>
+      <th>Layer</th>
+      <th>Responsibility</th>
+      <th>Concrete Examples</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>API Layer</td>
+      <td>HTTP transport, route dispatching, model validation, Swagger</td>
+      <td>AuthController, AccountsController, TransactionsController, SystemController</td>
+    </tr>
+    <tr>
+      <td>Middleware Layer</td>
+      <td>Cross-cutting pipeline concerns, tracing, exceptions, telemetry</td>
+      <td>CorrelationIdMiddleware, ExceptionMiddleware, RequestLoggingMiddleware</td>
+    </tr>
+    <tr>
+      <td>Service Layer</td>
+      <td>Business rules, ACID transfer orchestration, concurrency checks</td>
+      <td>AuthService, AccountService, TransactionService, SystemBackupService</td>
+    </tr>
+    <tr>
+      <td>Data Layer</td>
+      <td>Entity modeling, database context, migration history</td>
+      <td>ApplicationDbContext, Account, Transaction, ApplicationUser, Migrations</td>
+    </tr>
+    <tr class="last-row">
+      <td>Client Layer</td>
+      <td>User interface, client-side routing, JWT storage, state context</td>
+      <td>React components, AuthContext, Axios instance, CSS Modules</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>5.2 Request Flow</h2>
+<pre>
+React.js (Frontend SPA)
+  | HTTPS Request (JSON) + Authorization: Bearer &lt;JWT&gt;
+  v
+Kestrel Web Server
+  |
+  +--&gt; CorrelationIdMiddleware (Generates or propagates X-Correlation-ID)
+  |
+  +--&gt; ExceptionMiddleware (Global try/catch: maps domain exceptions to 400/401/404/409/422/500)
+  |
+  +--&gt; RequestLoggingMiddleware (Measures execution time with Stopwatch; logs method, path, status, ms)
+  |
+  +--&gt; UseRateLimiter (Fixed-window limiter: max 10 requests/min on /auth/login)
+  |
+  +--&gt; UseAuthentication (Validates JWT signature, lifetime, issuer, audience)
+  |
+  +--&gt; UseAuthorization (Enforces role claims &amp; endpoint access)
+  v
+Controller Layer (Model validation via [ApiController], route extraction)
+  v
+Service Layer (Business rules: Savings cash-only, active account check, ownership check)
+  v
+EF Core 8 / DbContext (LINQ, BeginTransactionAsync, RowVersion concurrency check)
+  v
+Microsoft SQL Server (Database: BankAccountDb)
+  ^
+  | Balance updated &amp; Transaction record inserted
+  +-- Result returned wrapped in DTO &mdash;&gt; ExceptionMiddleware &mdash;&gt; JSON Response
+</pre>
+
+<h2>5.3 Module Boundaries</h2>
+<p>The system enforces modular boundaries across four primary business domains:</p>
+<ul>
+  <li><strong>Authentication &amp; User Management:</strong> Manages <code>ApplicationUser</code>, Identity roles (<code>Admin</code>, <code>User</code>), registration, login, and JWT generation.</li>
+  <li><strong>Account Management:</strong> Manages bank accounts, account number formatting (<code>ACC-YYYYMMDD-XXXX</code>), ownership validation, and soft deactivation (<code>IsActive = false</code>).</li>
+  <li><strong>Transaction Management:</strong> Executes deposits, withdrawals, and atomic transfers. Enforces Savings cash-only constraint, Checking cheque support, balance sufficiency, and optimistic concurrency checks.</li>
+  <li><strong>System Backup &amp; Rehydration:</strong> Admin-only module providing full database export to JSON and atomic transactional rehydration.</li>
+</ul>
+
+<h1>6 Solution / Project Structure</h1>
+<pre>
+BankAccountManagementSystem/
+├── Backend/
+│   └── BankAccountManagementSystem.API/
+│       └── BankAccountManagementSystem.API/
+│           ├── Controllers/
+│           │   ├── AccountsController.cs        # /api/v1/accounts
+│           │   ├── AuthController.cs            # /api/v1/auth
+│           │   ├── HomeController.cs            # MVC default template controller
+│           │   ├── SystemController.cs          # /api/v1/system (save & restore)
+│           │   ├── TransactionsController.cs    # /api/v1/transactions
+│           │   └── UsersController.cs           # /api/v1/users (Admin CRUD)
+│           ├── Services/
+│           │   ├── Interfaces/
+│           │   │   ├── IAccountService.cs
+│           │   │   ├── IAuthService.cs
+│           │   │   ├── ISystemBackupService.cs
+│           │   │   ├── ITransactionService.cs
+│           │   │   └── IUserService.cs
+│           │   └── Implementations/
+│           │       ├── AccountService.cs
+│           │       ├── AuthService.cs
+│           │       ├── SystemBackupService.cs
+│           │       ├── TransactionService.cs
+│           │       └── UserService.cs
+│           ├── Models/
+│           │   ├── Account.cs                   # Balance, AccountType, RowVersion
+│           │   ├── AccountType.cs               # Enum: Savings (0), Checking (1)
+│           │   ├── ApplicationUser.cs           # Extends IdentityUser
+│           │   ├── Transaction.cs               # Amount, Type, Mode, Status, RefNumber
+│           │   ├── TransactionMode.cs           # Enum: Cash (0), Cheque (1)
+│           │   ├── TransactionStatus.cs         # Enum: Pending (0), Completed (1), Failed (2)
+│           │   └── TransactionType.cs           # Enum: Deposit (0), Withdrawal (1), Transfer (2)
+│           ├── DTOs/
+│           │   ├── Accounts/                    # CreateAccountRequest
+│           │   ├── Auth/                        # LoginRequest, LoginResponse, RegisterRequest
+│           │   ├── Common/                      # PagedResult&lt;T&gt;
+│           │   ├── System/                      # SystemBackupDto, RestoreResponseDto
+│           │   ├── Transactions/                # DepositRequest, WithdrawalRequest, TransferRequest, Query
+│           │   └── Users/                       # CreateUserRequest, UserResponse, AssignRoleRequest
+│           ├── Middleware/
+│           │   ├── CorrelationIdMiddleware.cs   # X-Correlation-ID injection & extraction
+│           │   ├── ExceptionMiddleware.cs       # Centralized 400/401/404/409/422/500 handler
+│           │   └── RequestLoggingMiddleware.cs  # Stopwatch HTTP timing & status logger
+│           ├── Data/
+│           │   ├── ApplicationDbContext.cs      # EF Core IdentityDbContext, Fluent API
+│           │   └── DbInitializer.cs             # Seeds Admin/User roles & default admin
+│           ├── Configuration/
+│           │   └── JwtSettings.cs               # Strongly typed JWT options
+│           ├── Exceptions/
+│           │   └── BankingExceptions.cs         # InsufficientBalance, AccountInactive, InvalidAccountType
+│           ├── Migrations/                      # 4 Code-First migrations
+│           ├── Logs/                            # bams-.log rolling daily files
+│           ├── Program.cs                       # WebApplicationBuilder, DI, Pipeline configuration
+│           └── appsettings.json                 # Connection strings, JWT settings, Serilog
+└── Frontend/
+    └── bank-management-frontend/
+        ├── src/
+        │   ├── api.js                           # Axios instance, Bearer token interceptor, 401 redirect
+        │   ├── App.jsx                          # BrowserRouter & Route configuration
+        │   ├── context/
+        │   │   └── AuthContext.jsx              # User, Token, Role, Login, Logout state
+        │   ├── components/
+        │   │   ├── BankingNavigation.jsx        # Sidebar/Navbar links
+        │   │   └── ProtectedRoute.jsx           # Token & Role authentication guard
+        │   ├── layouts/
+        │   │   └── DashboardLayout.jsx          # Shell with header, navigation, and page outlet
+        │   ├── pages/
+        │   │   ├── LoginPage.jsx                # /login
+        │   │   ├── RegisterPage.jsx             # /register
+        │   │   ├── DashboardPage.jsx            # /dashboard
+        │   │   ├── AccountsPage.jsx             # /accounts
+        │   │   ├── AddAccountPage.jsx           # /accounts/new
+        │   │   ├── AccountDetailsPage.jsx       # /accounts/:id
+        │   │   ├── DepositPage.jsx              # /transactions/deposit
+        │   │   ├── WithdrawPage.jsx             # /transactions/withdraw
+        │   │   ├── TransferPage.jsx             # /transactions/transfer
+        │   │   ├── TransactionHistoryPage.jsx   # /transactions/history
+        │   │   ├── BackupRestorePage.jsx        # /system/backup-restore (Admin only)
+        │   │   └── ProfilePage.jsx              # /profile
+        │   └── services/
+        │       ├── accountService.js            # Calls /api/v1/accounts
+        │       ├── transactionService.js        # Calls /api/v1/transactions
+        │       ├── systemService.js             # Calls /api/v1/system
+        │       └── userService.js               # Calls /api/v1/users
+        └── package.json
+</pre>
+
+<div class="page-break"></div>
+
+<h1>7 Complete Frontend Specification</h1>
+
+<h2>7.1 Full Page List by Role</h2>
+<p><strong>Public (Unauthenticated):</strong></p>
+<ul>
+  <li><code>/login</code> &mdash; User/Admin authentication page</li>
+  <li><code>/register</code> &mdash; Customer registration page</li>
+</ul>
+
+<p><strong>Authenticated User:</strong></p>
+<ul>
+  <li><code>/dashboard</code> &mdash; Overview of personal accounts, recent transactions, and quick action cards</li>
+  <li><code>/accounts</code> &mdash; List of owned accounts, balance summaries, active/inactive badges</li>
+  <li><code>/accounts/new</code> &mdash; Form to open a new Savings or Checking account</li>
+  <li><code>/accounts/:id</code> &mdash; Detailed account view with associated transaction history</li>
+  <li><code>/transactions/deposit</code> &mdash; Deposit funds (Cash or Cheque; Cheque disabled for Savings)</li>
+  <li><code>/transactions/withdraw</code> &mdash; Withdraw funds (Cash or Cheque; Cheque disabled for Savings)</li>
+  <li><code>/transactions/transfer</code> &mdash; Transfer funds between Checking accounts</li>
+  <li><code>/transactions/history</code> &mdash; Searchable, paginated transaction ledger</li>
+  <li><code>/profile</code> &mdash; Authenticated user details, employee code, assigned roles</li>
+</ul>
+
+<p><strong>Administrator (Admin Role):</strong></p>
+<ul>
+  <li>All User views listed above</li>
+  <li>Global account visibility across all users in <code>/accounts</code></li>
+  <li><code>/system/backup-restore</code> &mdash; Export complete database state to JSON and restore from backup file</li>
+  <li>Global transaction inspection across all bank accounts</li>
+</ul>
+
+<h2>7.2 Route-to-Role Visibility</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Route</th>
+      <th>Page Component</th>
+      <th>Access Requirement</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>/login</code></td>
+      <td>LoginPage.jsx</td>
+      <td>Public (Unauthenticated)</td>
+    </tr>
+    <tr>
+      <td><code>/register</code></td>
+      <td>RegisterPage.jsx</td>
+      <td>Public (Unauthenticated)</td>
+    </tr>
+    <tr>
+      <td><code>/dashboard</code></td>
+      <td>DashboardPage.jsx</td>
+      <td>Authenticated (User, Admin)</td>
+    </tr>
+    <tr>
+      <td><code>/accounts</code></td>
+      <td>AccountsPage.jsx</td>
+      <td>Authenticated (User sees own; Admin sees all)</td>
+    </tr>
+    <tr>
+      <td><code>/accounts/new</code></td>
+      <td>AddAccountPage.jsx</td>
+      <td>Authenticated (User, Admin)</td>
+    </tr>
+    <tr>
+      <td><code>/accounts/:id</code></td>
+      <td>AccountDetailsPage.jsx</td>
+      <td>Authenticated (Owner, Admin)</td>
+    </tr>
+    <tr>
+      <td><code>/transactions/deposit</code></td>
+      <td>DepositPage.jsx</td>
+      <td>Authenticated (Owner, Admin)</td>
+    </tr>
+    <tr>
+      <td><code>/transactions/withdraw</code></td>
+      <td>WithdrawPage.jsx</td>
+      <td>Authenticated (Owner, Admin)</td>
+    </tr>
+    <tr>
+      <td><code>/transactions/transfer</code></td>
+      <td>TransferPage.jsx</td>
+      <td>Authenticated (Checking Account Owner, Admin)</td>
+    </tr>
+    <tr>
+      <td><code>/transactions/history</code></td>
+      <td>TransactionHistoryPage.jsx</td>
+      <td>Authenticated (User sees own; Admin sees global)</td>
+    </tr>
+    <tr>
+      <td><code>/system/backup-restore</code></td>
+      <td>BackupRestorePage.jsx</td>
+      <td>Admin Role Only</td>
+    </tr>
+    <tr class="last-row">
+      <td><code>/profile</code></td>
+      <td>ProfilePage.jsx</td>
+      <td>Authenticated (Own Profile)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1>8 Domain Entities (Exact Fields)</h1>
+
+<h2>8.1 Account</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Type</th>
+      <th>Database Constraints</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>AccountId</td>
+      <td>int (PK)</td>
+      <td>Identity, Clustered Primary Key</td>
+    </tr>
+    <tr>
+      <td>AccountNumber</td>
+      <td>nvarchar(20)</td>
+      <td>Unique Index (IX_Accounts_AccountNumber), Not Null</td>
+    </tr>
+    <tr>
+      <td>Balance</td>
+      <td>decimal(18,2)</td>
+      <td>Default: 0.00, Not Null</td>
+    </tr>
+    <tr>
+      <td>AccountType</td>
+      <td>AccountType (int)</td>
+      <td>0 = Savings, 1 = Checking, Not Null</td>
+    </tr>
+    <tr>
+      <td>IsActive</td>
+      <td>bit</td>
+      <td>Default: 1 (True), Not Null (Soft delete flag)</td>
+    </tr>
+    <tr>
+      <td>CreatedAt</td>
+      <td>datetime2</td>
+      <td>Not Null, UTC timestamp</td>
+    </tr>
+    <tr>
+      <td>UserId</td>
+      <td>nvarchar(450) (FK)</td>
+      <td>References AspNetUsers(Id), DeleteBehavior.Restrict, Not Null</td>
+    </tr>
+    <tr class="last-row">
+      <td>RowVersion</td>
+      <td>byte[] (rowversion)</td>
+      <td>SQL Server rowversion column; EF Core concurrency token</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>8.2 Transaction</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Type</th>
+      <th>Database Constraints</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>TransactionId</td>
+      <td>int (PK)</td>
+      <td>Identity, Clustered Primary Key</td>
+    </tr>
+    <tr>
+      <td>AccountId</td>
+      <td>int (FK)</td>
+      <td>References Accounts(AccountId), DeleteBehavior.Restrict, Not Null</td>
+    </tr>
+    <tr>
+      <td>RelatedAccountId</td>
+      <td>int (FK, Nullable)</td>
+      <td>References Accounts(AccountId), DeleteBehavior.Restrict, Nullable</td>
+    </tr>
+    <tr>
+      <td>Amount</td>
+      <td>decimal(18,2)</td>
+      <td>Not Null, Greater than 0.00</td>
+    </tr>
+    <tr>
+      <td>TransactionType</td>
+      <td>TransactionType (int)</td>
+      <td>0 = Deposit, 1 = Withdrawal, 2 = Transfer, Not Null</td>
+    </tr>
+    <tr>
+      <td>TransactionMode</td>
+      <td>TransactionMode (int)</td>
+      <td>0 = Cash, 1 = Cheque, Not Null</td>
+    </tr>
+    <tr>
+      <td>Status</td>
+      <td>TransactionStatus (int)</td>
+      <td>0 = Pending, 1 = Completed, 2 = Failed, Not Null</td>
+    </tr>
+    <tr>
+      <td>ReferenceNumber</td>
+      <td>nvarchar(30)</td>
+      <td>Unique Index (IX_Transactions_ReferenceNumber), Not Null</td>
+    </tr>
+    <tr>
+      <td>TransactionDate</td>
+      <td>datetime2</td>
+      <td>Index (IX_Transactions_TransactionDate), Not Null</td>
+    </tr>
+    <tr class="last-row">
+      <td>Description</td>
+      <td>nvarchar(500)</td>
+      <td>Nullable string</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>8.3 ApplicationUser / Identity Core</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Entity</th>
+      <th>Fields &amp; Key Properties</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ApplicationUser</td>
+      <td>Id (nvarchar(450), PK), EmployeeCode (nvarchar(50), Unique Index), FirstName (nvarchar(100)), LastName (nvarchar(100)), Email (nvarchar(256), Unique), PasswordHash (nvarchar(max)), SecurityStamp, LockoutEnd, FailedAccessAttempts</td>
+    </tr>
+    <tr>
+      <td>IdentityRole</td>
+      <td>Id (nvarchar(450), PK), Name (nvarchar(256), Unique: Admin, User)</td>
+    </tr>
+    <tr class="last-row">
+      <td>IdentityUserRole</td>
+      <td>UserId (FK), RoleId (FK) &mdash; Composite Primary Key</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>8.4 Domain Enumerations</h2>
+<pre>
+public enum AccountType       { Savings = 0, Checking = 1 }
+public enum TransactionType   { Deposit = 0, Withdrawal = 1, Transfer = 2 }
+public enum TransactionMode   { Cash = 0, Cheque = 1 }
+public enum TransactionStatus { Pending = 0, Completed = 1, Failed = 2 }
+</pre>
+
+<div class="page-break"></div>
+
+<h1>9 Database Design &mdash; Indexes &amp; Constraints (SQL Server)</h1>
+<p>Foreign keys enforce <code>ON DELETE RESTRICT</code> / <code>NO ACTION</code> to guarantee that banking ledgers remain immutable and cannot be orphaned. Concurrency is handled by SQL Server&rsquo;s native <code>rowversion</code> data type.</p>
+
+<pre>
+-- Unique index on account numbers
+CREATE UNIQUE NONCLUSTERED INDEX [IX_Accounts_AccountNumber]
+ON [Accounts]([AccountNumber]);
+
+-- Unique index on employee codes
+CREATE UNIQUE NONCLUSTERED INDEX [IX_AspNetUsers_EmployeeCode]
+ON [AspNetUsers]([EmployeeCode]);
+
+-- Unique index on financial transaction reference numbers
+CREATE UNIQUE NONCLUSTERED INDEX [IX_Transactions_ReferenceNumber]
+ON [Transactions]([ReferenceNumber]);
+
+-- Performance index for global chronological sorting
+CREATE NONCLUSTERED INDEX [IX_Transactions_TransactionDate]
+ON [Transactions]([TransactionDate]);
+
+-- Composite index optimizing account-specific historical queries
+CREATE NONCLUSTERED INDEX [IX_Transactions_AccountId_TransactionDate]
+ON [Transactions]([AccountId], [TransactionDate]);
+</pre>
+
+<p><strong>Design benefits of this schema:</strong></p>
+<ul>
+  <li><strong>Audit trail immutability:</strong> Soft delete prevents physical deletion of accounts that have transaction rows attached.</li>
+  <li><strong>Race condition prevention:</strong> The <code>RowVersion</code> column increments on every SQL UPDATE, allowing EF Core to identify concurrent writes and throw <code>DbUpdateConcurrencyException</code>.</li>
+  <li><strong>High-speed ledger pagination:</strong> The composite index on <code>(AccountId, TransactionDate)</code> provides sub-millisecond query performance on paginated history lookups.</li>
+</ul>
+
+<h1>10 RBAC &mdash; Roles, Permissions &amp; Enforcement</h1>
+
+<h2>10.1 Roles</h2>
+<p>The system defines exactly two enterprise roles: <code>Admin</code> and <code>User</code>.</p>
+
+<h2>10.2 Seed Permissions by Role</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Role</th>
+      <th>Permissions &amp; Capabilities</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Admin</td>
+      <td>Full system access: User management (CRUD), Role assignment, Global account inspection, Global transaction history querying, System save/restore (JSON backup &amp; rehydration).</td>
+    </tr>
+    <tr class="last-row">
+      <td>User</td>
+      <td>Self-service banking: Account opening, View owned accounts &amp; balances, Deposit (Cash/Cheque), Withdraw (Cash/Cheque), Transfer between Checking accounts, View owned transaction history, Profile management.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>10.3 Policy Registration (Program.cs)</h2>
+<pre>
+// Role-based authorization policies applied to controller actions
+[Authorize(Roles = "Admin")]
+public class UsersController : ControllerBase { ... }
+
+[Authorize(Roles = "Admin")]
+public class SystemController : ControllerBase { ... }
+
+// Granular resource ownership validated in services
+var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+var isAdmin = User.IsInRole("Admin");
+if (account.UserId != currentUserId && !isAdmin)
+    throw new UnauthorizedAccessException("Access denied to this account.");
+</pre>
+
+<h2>10.4 Full Authorization Matrix</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Capability</th>
+      <th>Admin</th>
+      <th>User (Owner)</th>
+      <th>User (Non-Owner)</th>
+      <th>Unauthenticated</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Register / Login</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes (Public)</td>
+    </tr>
+    <tr>
+      <td>View Account Balance</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No (401/403)</td>
+      <td>No (401)</td>
+    </tr>
+    <tr>
+      <td>Open Account</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No (401)</td>
+    </tr>
+    <tr>
+      <td>Deposit / Withdraw</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No (401/403)</td>
+      <td>No (401)</td>
+    </tr>
+    <tr>
+      <td>Transfer Funds</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No (401/403)</td>
+      <td>No (401)</td>
+    </tr>
+    <tr>
+      <td>Deactivate Account</td>
+      <td>Yes</td>
+      <td>Yes</td>
+      <td>No (401/403)</td>
+      <td>No (401)</td>
+    </tr>
+    <tr>
+      <td>System Save &amp; Restore</td>
+      <td>Yes</td>
+      <td>No (403)</td>
+      <td>No (403)</td>
+      <td>No (401)</td>
+    </tr>
+    <tr class="last-row">
+      <td>User Management (CRUD)</td>
+      <td>Yes</td>
+      <td>No (403)</td>
+      <td>No (403)</td>
+      <td>No (401)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1>11 Frontend &harr; Backend Permission Mapping</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Feature / Action</th>
+      <th>Backend Endpoint</th>
+      <th>Required Role</th>
+      <th>Frontend UI Element / Behavior</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Open Account</td>
+      <td>POST /api/v1/accounts</td>
+      <td>User / Admin</td>
+      <td>&ldquo;Open Account&rdquo; button &amp; modal</td>
+    </tr>
+    <tr>
+      <td>Deactivate Account</td>
+      <td>DELETE /api/v1/accounts/{id}</td>
+      <td>Owner / Admin</td>
+      <td>&ldquo;Deactivate&rdquo; button on Account card</td>
+    </tr>
+    <tr>
+      <td>Deposit Funds</td>
+      <td>POST /api/v1/transactions/deposit</td>
+      <td>Owner / Admin</td>
+      <td>Deposit form submit button</td>
+    </tr>
+    <tr>
+      <td>Withdraw Funds</td>
+      <td>POST /api/v1/transactions/withdraw</td>
+      <td>Owner / Admin</td>
+      <td>Withdrawal form submit button</td>
+    </tr>
+    <tr>
+      <td>Transfer Funds</td>
+      <td>POST /api/v1/transactions/transfer</td>
+      <td>Owner / Admin</td>
+      <td>Transfer form submit button</td>
+    </tr>
+    <tr>
+      <td>System Backup</td>
+      <td>GET /api/v1/system/save</td>
+      <td>Admin</td>
+      <td>&ldquo;Export Backup JSON&rdquo; button (Admin only)</td>
+    </tr>
+    <tr class="last-row">
+      <td>System Restore</td>
+      <td>POST /api/v1/system/restore</td>
+      <td>Admin</td>
+      <td>&ldquo;Restore System&rdquo; button &amp; upload (Admin only)</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<h1>12 Database Seed Data</h1>
+
+<h2>12.1 Roles</h2>
+<p>Seeded idempotently on startup via <code>DbSeeder.cs</code>: <code>Admin</code> and <code>User</code>.</p>
+
+<h2>12.2 Default Administrator Account</h2>
+<p>The system seeds a default administrator account so the platform is operational upon initial deployment:</p>
+<ul>
+  <li><strong>Email:</strong> <code>admin@bank.com</code></li>
+  <li><strong>Employee Code:</strong> <code>EMP001</code></li>
+  <li><strong>Role:</strong> <code>Admin</code></li>
+  <li><strong>Password:</strong> Configured securely through environment variables / secret store (e.g., <code>Admin@12345</code> in development environments).</li>
+</ul>
+
+<h2>12.3 Reference Data</h2>
+<p>Sample customer accounts (Savings and Checking) are provisioned during development to enable immediate verification of financial transfers, concurrency tokens, and cash-only rules.</p>
+
+<h1>13 Authentication &mdash; JWT Contract</h1>
+
+<h2>13.1 Claims in the Access Token</h2>
+<pre>
+{
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier": "usr_99182",
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": "customer@bank.com",
+  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": "User",
+  "employeeCode": "EMP042",
+  "jti": "c89f2a0b-11d2-4e8c-8f43-098274aef12a",
+  "iss": "BankAccountManagementSystem.API",
+  "aud": "BankAccountManagementSystem.Client",
+  "exp": 1735142400
+}
+</pre>
+<ul>
+  <li><strong>Token Algorithm:</strong> HMAC-SHA256 (<code>SecurityAlgorithms.HmacSha256</code>) with a 256-bit symmetric key.</li>
+  <li><strong>Access Token TTL:</strong> 60 minutes (configurable via <code>JwtSettings.ExpiryInMinutes</code>).</li>
+  <li><strong>Clock Skew:</strong> Set to <code>TimeSpan.Zero</code> for exact expiration enforcement.</li>
+</ul>
+
+<h2>13.2 Endpoints</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Route</th>
+      <th>Payload</th>
+      <th>Response</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>POST</td>
+      <td>/api/v1/auth/register</td>
+      <td>RegisterRequest (EmployeeCode, Names, Email, Password)</td>
+      <td>201 Created &mdash; RegisterResponse</td>
+    </tr>
+    <tr>
+      <td>POST</td>
+      <td>/api/v1/auth/login</td>
+      <td>LoginRequest (Email, Password)</td>
+      <td>200 OK &mdash; LoginResponse (Token, User Profile)</td>
+    </tr>
+    <tr class="last-row">
+      <td>GET</td>
+      <td>/api/v1/auth/me</td>
+      <td>None (Requires Bearer Token)</td>
+      <td>200 OK &mdash; Authenticated User Profile</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>13.3 Password Policy &amp; Lockout</h2>
+<ul>
+  <li><strong>Password Constraints:</strong> Minimum 8 characters; must contain at least 1 digit, 1 lowercase letter, 1 uppercase letter, and 1 non-alphanumeric character.</li>
+  <li><strong>Hashing:</strong> PBKDF2 with HMAC-SHA256 and cryptographic per-user salt.</li>
+  <li><strong>Lockout Policy:</strong> 5 consecutive failed access attempts triggers a 5-minute account lockout.</li>
+</ul>
+
+<h2>13.4 Middleware Pipeline Order (Program.cs)</h2>
+<p>The middleware pipeline executes in strict sequential order:</p>
+<pre>
+1. CorrelationIdMiddleware   --> Assigns or propagates X-Correlation-ID
+2. ExceptionMiddleware       --> Global catch: formats standard JSON error envelope
+3. RequestLoggingMiddleware  --> Telemetry: logs method, path, status, duration (ms)
+4. UseSwagger & SwaggerUI   --> Development API documentation
+5. UseHttpsRedirection       --> Enforces HTTPS transport
+6. UseStaticFiles            --> Serves static assets
+7. UseRouting                --> Resolves endpoint routing
+8. UseRateLimiter            --> Enforces fixed-window limiter on /auth/login
+9. UseAuthentication         --> Validates JWT Bearer token
+10. UseAuthorization         --> Enforces role and policy authorization
+11. MapHealthChecks          --> GET /health endpoint
+12. MapControllers           --> Dispatches request to controller action
+</pre>
+
+<h1>14 Configuration &amp; Environment Variables</h1>
+
+<h2>14.1 Backend (appsettings.json)</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Configuration Key</th>
+      <th>Purpose &amp; Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ConnectionStrings:DefaultConnection</td>
+      <td>SQL Server connection string (Server, Database, Security)</td>
+    </tr>
+    <tr>
+      <td>JwtSettings:SecretKey</td>
+      <td>256-bit symmetric encryption key used to sign JWTs</td>
+    </tr>
+    <tr>
+      <td>JwtSettings:Issuer</td>
+      <td>Valid issuer claim (BankAccountManagementSystem.API)</td>
+    </tr>
+    <tr>
+      <td>JwtSettings:Audience</td>
+      <td>Valid audience claim (BankAccountManagementSystem.Client)</td>
+    </tr>
+    <tr>
+      <td>JwtSettings:ExpiryInMinutes</td>
+      <td>Token validity period (e.g., 60 minutes)</td>
+    </tr>
+    <tr class="last-row">
+      <td>Serilog:MinimumLevel</td>
+      <td>Logging threshold (Information in Dev, Warning in Prod)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>14.2 Frontend (Vite Environment Variables)</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Key</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="last-row">
+      <td>VITE_API_BASE_URL</td>
+      <td>Base URL of the ASP.NET Core backend (e.g. http://localhost:5247/api/v1)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>14.3 Configuration Files Required</h2>
+<pre>
+Backend:
+  appsettings.json                # Base configuration
+  appsettings.Development.json    # Local development overrides
+Frontend:
+  .env                            # Local environment variables (VITE_API_BASE_URL)
+  .env.example                    # Template with dummy values
+</pre>
+
+<div class="page-break"></div>
+
+<h1>15 API Contract (Representative Endpoints)</h1>
+
+<h2>15.1 Authentication</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Route</th>
+      <th>Policy</th>
+      <th>Success Response</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>POST</td>
+      <td>/api/v1/auth/register</td>
+      <td>[AllowAnonymous]</td>
+      <td>201 Created &mdash; RegisterResponse</td>
+    </tr>
+    <tr>
+      <td>POST</td>
+      <td>/api/v1/auth/login</td>
+      <td>[AllowAnonymous], RateLimited</td>
+      <td>200 OK &mdash; LoginResponse (Token, User)</td>
+    </tr>
+    <tr class="last-row">
+      <td>GET</td>
+      <td>/api/v1/auth/me</td>
+      <td>[Authorize]</td>
+      <td>200 OK &mdash; Current User Profile</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>15.2 Bank Accounts</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Route</th>
+      <th>Policy</th>
+      <th>Success Response</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>POST</td>
+      <td>/api/v1/accounts</td>
+      <td>[Authorize]</td>
+      <td>201 Created &mdash; Account Details</td>
+    </tr>
+    <tr>
+      <td>GET</td>
+      <td>/api/v1/accounts</td>
+      <td>[Authorize]</td>
+      <td>200 OK &mdash; List of Accounts</td>
+    </tr>
+    <tr>
+      <td>GET</td>
+      <td>/api/v1/accounts/{id}</td>
+      <td>[Authorize] (Owner/Admin)</td>
+      <td>200 OK &mdash; Account Details</td>
+    </tr>
+    <tr>
+      <td>GET</td>
+      <td>/api/v1/accounts/{id}/balance</td>
+      <td>[Authorize] (Owner/Admin)</td>
+      <td>200 OK &mdash; { accountId, balance }</td>
+    </tr>
+    <tr class="last-row">
+      <td>DELETE</td>
+      <td>/api/v1/accounts/{id}</td>
+      <td>[Authorize] (Owner/Admin)</td>
+      <td>200 OK &mdash; Soft deactivation</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>15.3 Transactions</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Route</th>
+      <th>Policy</th>
+      <th>Success Response</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>POST</td>
+      <td>/api/v1/transactions/deposit</td>
+      <td>[Authorize] (Owner/Admin)</td>
+      <td>200 OK &mdash; TransactionResponse</td>
+    </tr>
+    <tr>
+      <td>POST</td>
+      <td>/api/v1/transactions/withdraw</td>
+      <td>[Authorize] (Owner/Admin)</td>
+      <td>200 OK &mdash; TransactionResponse</td>
+    </tr>
+    <tr>
+      <td>POST</td>
+      <td>/api/v1/transactions/transfer</td>
+      <td>[Authorize] (Owner/Admin)</td>
+      <td>200 OK &mdash; TransactionResponse</td>
+    </tr>
+    <tr>
+      <td>GET</td>
+      <td>/api/v1/transactions</td>
+      <td>[Authorize(Roles = "Admin")]</td>
+      <td>200 OK &mdash; PagedResult&lt;TransactionResponse&gt;</td>
+    </tr>
+    <tr class="last-row">
+      <td>GET</td>
+      <td>/api/v1/transactions/account/{accountId}</td>
+      <td>[Authorize] (Owner/Admin)</td>
+      <td>200 OK &mdash; PagedResult&lt;TransactionResponse&gt;</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>15.4 System Save &amp; Restore</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Route</th>
+      <th>Policy</th>
+      <th>Success Response</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GET</td>
+      <td>/api/v1/system/save</td>
+      <td>[Authorize(Roles = "Admin")]</td>
+      <td>200 OK &mdash; SystemBackupDto (JSON file)</td>
+    </tr>
+    <tr class="last-row">
+      <td>POST</td>
+      <td>/api/v1/system/restore</td>
+      <td>[Authorize(Roles = "Admin")]</td>
+      <td>200 OK &mdash; RestoreResponseDto</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>15.5 Error Responses (All Endpoints)</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Status</th>
+      <th>Condition</th>
+      <th>Sample Response Body</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>400 Bad Request</td>
+      <td>Model validation failure / invalid inputs</td>
+      <td><code>{ "success": false, "message": "Amount must be greater than zero." }</code></td>
+    </tr>
+    <tr>
+      <td>401 Unauthorized</td>
+      <td>Missing or expired JWT Bearer token</td>
+      <td>Standard HTTP 401 Unauthorized</td>
+    </tr>
+    <tr>
+      <td>403 Forbidden</td>
+      <td>User attempts Admin endpoint (e.g. Save/Restore)</td>
+      <td>Standard HTTP 403 Forbidden</td>
+    </tr>
+    <tr>
+      <td>404 Not Found</td>
+      <td>Account or transaction ID does not exist</td>
+      <td><code>{ "success": false, "message": "Account with ID 999 not found." }</code></td>
+    </tr>
+    <tr>
+      <td>409 Conflict</td>
+      <td>Concurrent update on same account balance</td>
+      <td><code>{ "success": false, "message": "The record was modified by another user." }</code></td>
+    </tr>
+    <tr>
+      <td>422 Unprocessable</td>
+      <td>Insufficient funds / Savings cheque violation</td>
+      <td><code>{ "success": false, "message": "Insufficient balance. Available: 500.00" }</code></td>
+    </tr>
+    <tr>
+      <td>429 Too Many Req</td>
+      <td>Login attempts exceed 10/min from same IP</td>
+      <td>Standard HTTP 429 Too Many Requests</td>
+    </tr>
+    <tr class="last-row">
+      <td>500 Internal Error</td>
+      <td>Unhandled server failure / database disconnect</td>
+      <td><code>{ "success": false, "message": "Something went wrong.", "correlationId": "..." }</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h1>16 API Request &amp; Response Examples</h1>
+
+<p><strong>POST /api/v1/auth/login</strong></p>
+<pre>
+// Request
+{ "email": "customer@bank.com", "password": "Password123!" }
+
+// Response 200 OK
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "usr_99182",
+    "employeeCode": "EMP042",
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "customer@bank.com",
+    "roles": ["User"]
+  }
+}
+</pre>
+
+<p><strong>POST /api/v1/accounts</strong></p>
+<pre>
+// Request
+{ "accountType": 1, "initialDeposit": 2500.00 }
+
+// Response 201 Created
+{
+  "accountId": 104,
+  "accountNumber": "ACC-20260928-8472",
+  "balance": 2500.00,
+  "accountType": "Checking",
+  "isActive": true,
+  "createdAt": "2026-09-28T09:15:00Z"
+}
+</pre>
+
+<p><strong>POST /api/v1/transactions/deposit (Cash on Savings Account)</strong></p>
+<pre>
+// Request
+{ "accountId": 101, "amount": 1000.00, "mode": 0 }
+
+// Response 200 OK
+{
+  "transactionId": 501,
+  "referenceNumber": "TXN-20260928-88392019",
+  "amount": 1000.00,
+  "transactionType": "Deposit",
+  "transactionMode": "Cash",
+  "status": "Completed",
+  "transactionDate": "2026-09-28T09:20:00Z",
+  "balanceAfter": 6000.00
+}
+</pre>
+
+<p><strong>POST /api/v1/transactions/deposit (Cheque on Savings Account &mdash; Rejected)</strong></p>
+<pre>
+// Request
+{ "accountId": 101, "amount": 1000.00, "mode": 1 }
+
+// Response 422 Unprocessable Entity
+{
+  "success": false,
+  "message": "Savings accounts allow cash transactions only. Cheque transactions are not permitted.",
+  "statusCode": 422,
+  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+}
+</pre>
+
+<p><strong>POST /api/v1/transactions/transfer (Checking to Checking)</strong></p>
+<pre>
+// Request
+{ "sourceAccountId": 104, "destinationAccountId": 105, "amount": 500.00, "mode": 1 }
+
+// Response 200 OK
+{
+  "transactionId": 504,
+  "referenceNumber": "TXN-20260928-99201122",
+  "amount": 500.00,
+  "transactionType": "Transfer",
+  "transactionMode": "Cheque",
+  "status": "Completed",
+  "transactionDate": "2026-09-28T09:30:00Z",
+  "balanceAfter": 2000.00
+}
+</pre>
+
+<div class="page-break"></div>
+
+<h1>17 Repository / Service Interfaces &amp; DTOs</h1>
+
+<h2>17.1 Service Contracts</h2>
+<pre>
+public interface IAccountService
+{
+    Task&lt;AccountResponse&gt; CreateAccountAsync(CreateAccountRequest request, string userId);
+    Task&lt;IEnumerable&lt;AccountResponse&gt;&gt; GetAccountsAsync(string userId, bool isAdmin);
+    Task&lt;AccountResponse&gt; GetAccountByIdAsync(int id, string userId, bool isAdmin);
+    Task&lt;decimal&gt; GetBalanceAsync(int id, string userId, bool isAdmin);
+    Task DeactivateAccountAsync(int id, string userId, bool isAdmin);
+}
+
+public interface ITransactionService
+{
+    Task&lt;TransactionResponse&gt; DepositAsync(DepositRequest request, string userId, bool isAdmin);
+    Task&lt;TransactionResponse&gt; WithdrawAsync(WithdrawalRequest request, string userId, bool isAdmin);
+    Task&lt;TransactionResponse&gt; TransferAsync(TransferRequest request, string userId, bool isAdmin);
+    Task&lt;PagedResult&lt;TransactionResponse&gt;&gt; GetAccountTransactionsAsync(int accountId, TransactionHistoryQuery query, string userId, bool isAdmin);
+    Task&lt;PagedResult&lt;TransactionResponse&gt;&gt; GetAllTransactionsAsync(TransactionHistoryQuery query);
+    Task&lt;TransactionResponse&gt; GetTransactionByIdAsync(int id, string userId, bool isAdmin);
+}
+</pre>
+
+<h2>17.2 Example Service Method (TransferAsync: ACID + Concurrency + Logging)</h2>
+<pre>
+public async Task&lt;TransactionResponse&gt; TransferAsync(TransferRequest request, string userId, bool isAdmin)
+{
+    if (request.SourceAccountId == request.DestinationAccountId)
+        throw new InvalidTransactionException("Source and destination accounts must be different.");
+
+    using var dbTx = await _context.Database.BeginTransactionAsync();
+    try
+    {
+        var source = await _context.Accounts.FirstOrDefaultAsync(a =&gt; a.AccountId == request.SourceAccountId)
+                     ?? throw new KeyNotFoundException("Source account not found.");
+        var dest = await _context.Accounts.FirstOrDefaultAsync(a =&gt; a.AccountId == request.DestinationAccountId)
+                   ?? throw new KeyNotFoundException("Destination account not found.");
+
+        // Validate active state
+        if (!source.IsActive) throw new AccountInactiveException(source.AccountNumber);
+        if (!dest.IsActive) throw new AccountInactiveException(dest.AccountNumber);
+
+        // Validate ownership
+        if (source.UserId != userId && !isAdmin)
+            throw new UnauthorizedAccessException("Access denied to source account.");
+
+        // Business Rule: Transfers only permitted between Checking accounts
+        if (source.AccountType != AccountType.Checking || dest.AccountType != AccountType.Checking)
+            throw new InvalidAccountTypeException("Transfers are only permitted between Checking accounts.");
+
+        // Validate balance sufficiency
+        if (source.Balance &lt; request.Amount)
+            throw new InsufficientBalanceException(source.Balance, request.Amount);
+
+        source.Balance -= request.Amount;
+        dest.Balance += request.Amount;
+
+        var refNumber = GenerateReferenceNumber();
+
+        var debitTx = new Transaction {
+            AccountId = source.AccountId,
+            RelatedAccountId = dest.AccountId,
+            Amount = request.Amount,
+            TransactionType = TransactionType.Transfer,
+            TransactionMode = request.Mode,
+            Status = TransactionStatus.Completed,
+            ReferenceNumber = refNumber,
+            TransactionDate = DateTime.UtcNow,
+            Description = $"Transfer to {dest.AccountNumber}"
+        };
+
+        var creditTx = new Transaction {
+            AccountId = dest.AccountId,
+            RelatedAccountId = source.AccountId,
+            Amount = request.Amount,
+            TransactionType = TransactionType.Transfer,
+            TransactionMode = request.Mode,
+            Status = TransactionStatus.Completed,
+            ReferenceNumber = refNumber,
+            TransactionDate = DateTime.UtcNow,
+            Description = $"Transfer from {source.AccountNumber}"
+        };
+
+        _context.Transactions.AddRange(debitTx, creditTx);
+        await _context.SaveChangesAsync();
+        await dbTx.CommitAsync();
+
+        _logger.LogInformation("Transfer completed: {RefNumber}, Amount: {Amount}, From: {From}, To: {To}",
+            refNumber, request.Amount, source.AccountNumber, dest.AccountNumber);
+
+        return MapToResponse(debitTx, source.Balance);
+    }
+    catch (DbUpdateConcurrencyException ex)
+    {
+        await dbTx.RollbackAsync();
+        _logger.LogWarning(ex, "Concurrency violation during transfer.");
+        throw;
+    }
+    catch
+    {
+        await dbTx.RollbackAsync();
+        throw;
+    }
+}
+</pre>
+
+<h2>17.3 ITransactionService</h2>
+<p>Orchestrates all debit, credit, and query operations. Ensures transactions are tracked, balances match exactly, and concurrency tokens are checked upon write.</p>
+
+<h2>17.4 Key DTOs</h2>
+<table>
+  <thead>
+    <tr>
+      <th>DTO Name</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>DepositRequest / WithdrawalRequest</td>
+      <td>Validated inputs for cash/cheque deposits and withdrawals</td>
+    </tr>
+    <tr>
+      <td>TransferRequest</td>
+      <td>Validated input for inter-account fund transfers</td>
+    </tr>
+    <tr>
+      <td>TransactionResponse</td>
+      <td>Standard response representing transaction ledger entry</td>
+    </tr>
+    <tr>
+      <td>TransactionHistoryQuery</td>
+      <td>Pagination parameters (Page, PageSize) and date filters</td>
+    </tr>
+    <tr>
+      <td>SystemBackupDto</td>
+      <td>Root envelope for JSON system export &amp; rehydration</td>
+    </tr>
+    <tr class="last-row">
+      <td>RestoreResponseDto</td>
+      <td>Summary confirmation after system rehydration</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1>18 Complete DTO Specification</h1>
+<pre>
+DepositRequest:
+  AccountId: int, required
+  Amount: decimal, required, range [0.01, 10000000.00]
+  Mode: TransactionMode (0 = Cash, 1 = Cheque), required
+
+WithdrawalRequest:
+  AccountId: int, required
+  Amount: decimal, required, range [0.01, 10000000.00]
+  Mode: TransactionMode (0 = Cash, 1 = Cheque), required
+
+TransferRequest:
+  SourceAccountId: int, required
+  DestinationAccountId: int, required
+  Amount: decimal, required, range [0.01, 10000000.00]
+  Mode: TransactionMode (0 = Cash, 1 = Cheque), required
+
+CreateAccountRequest:
+  AccountType: AccountType (0 = Savings, 1 = Checking), required
+  InitialDeposit: decimal, required, range [0.00, 10000000.00]
+
+TransactionHistoryQuery:
+  Page: int, default = 1, min = 1
+  PageSize: int, default = 10, range [1, 100]
+  StartDate: DateTime?, optional
+  EndDate: DateTime?, optional
+  TransactionType: TransactionType?, optional
+</pre>
+
+<div class="page-break"></div>
+
+<h1>19 Financial &amp; Transaction Engine &mdash; Deep Detail</h1>
+
+<h2>19.1 Balance &amp; Transaction Formulas</h2>
+<pre>
+Deposit:
+  New Balance = Current Balance + Deposit Amount
+
+Withdrawal:
+  New Balance = Current Balance - Withdrawal Amount
+  Constraint: Current Balance >= Withdrawal Amount (else throw InsufficientBalanceException)
+
+Transfer:
+  Source New Balance = Source Current Balance - Transfer Amount
+  Destination New Balance = Destination Current Balance + Transfer Amount
+  Constraint: Source Current Balance >= Transfer Amount
+  Constraint: Source.AccountType == Checking AND Destination.AccountType == Checking
+</pre>
+
+<h2>19.2 Transfer Processing Flow</h2>
+<pre>
+Client POST /api/v1/transactions/transfer
+  |
+  v
+Validate Request Model (Source != Destination, Amount > 0)
+  |
+  v
+Begin EF Core Database Transaction (await _context.Database.BeginTransactionAsync())
+  |
+  +-- Fetch Source Account (Include RowVersion)
+  +-- Fetch Destination Account (Include RowVersion)
+  |
+  v
+Check Active Status (Both accounts must have IsActive == true)
+  |
+  v
+Check Ownership (Caller must own Source Account or hold Admin role)
+  |
+  v
+Enforce Account Types (Both accounts must be Checking; Savings cannot transfer)
+  |
+  v
+Verify Balance Sufficiency (Source Balance >= Amount)
+  |
+  v
+Update Balances (Source -= Amount; Destination += Amount)
+  |
+  v
+Create Transaction Ledgers (Debit leg with RelatedAccountId; Credit leg with RelatedAccountId)
+  |
+  v
+Commit Changes (SaveChangesAsync -> CommitAsync)
+  | If DbUpdateConcurrencyException occurs -> RollbackAsync -> Throw Conflict (409)
+  | If any error occurs -> RollbackAsync -> Throw Exception
+  v
+Return TransactionResponse
+</pre>
+
+<h2>19.3 Concurrency Control &amp; RowVersion Mechanics</h2>
+<p>Financial transactions are highly susceptible to lost updates if two requests read the same balance and update it concurrently. BAMS implements <strong>Optimistic Concurrency Control</strong> using SQL Server&rsquo;s <code>rowversion</code> column:</p>
+<ul>
+  <li><code>Account.RowVersion</code> is mapped in EF Core using <code>entity.Property(a => a.RowVersion).IsRowVersion()</code>.</li>
+  <li>SQL Server automatically increments the rowversion value whenever an account record is updated.</li>
+  <li>EF Core appends <code>WHERE AccountId = @id AND RowVersion = @original</code> to the SQL <code>UPDATE</code> statement.</li>
+  <li>If another thread modified the balance first, zero rows are affected, causing EF Core to throw <code>DbUpdateConcurrencyException</code>.</li>
+  <li><code>ExceptionMiddleware</code> catches this exception and returns an HTTP <code>409 Conflict</code> response, advising the client to retry.</li>
+</ul>
+
+<h1>20 Structured Logging &amp; Audit Trail</h1>
+
+<h2>20.1 Serilog Sinks</h2>
+<ul>
+  <li><strong>Console Sink:</strong> Human-readable colored output for real-time development inspection.</li>
+  <li><strong>File Sink:</strong> Daily rolling log files saved to <code>Logs/bams-.log</code> with a 30-day retention limit and structured message templates.</li>
+</ul>
+
+<h2>20.2 Canonical Event Names</h2>
+<ul>
+  <li><code>AUTH_LOGIN_SUCCESS</code>, <code>AUTH_LOGIN_FAILED</code>, <code>AUTH_LOGOUT</code>, <code>ACCOUNT_LOCKED</code></li>
+  <li><code>ACCOUNT_CREATED</code>, <code>ACCOUNT_DEACTIVATED</code></li>
+  <li><code>DEPOSIT_COMPLETED</code>, <code>WITHDRAWAL_COMPLETED</code>, <code>TRANSFER_COMPLETED</code></li>
+  <li><code>CONCURRENCY_CONFLICT</code>, <code>INSUFFICIENT_FUNDS</code>, <code>SAVINGS_CHEQUE_VIOLATION</code></li>
+  <li><code>SYSTEM_BACKUP_EXPORTED</code>, <code>SYSTEM_RESTORE_COMPLETED</code></li>
+  <li><code>UNHANDLED_EXCEPTION</code>, <code>RATE_LIMIT_EXCEEDED</code></li>
+</ul>
+
+<h2>20.3 Never Logged</h2>
+<p class="callout">Plaintext passwords, password hashes, JWT Bearer tokens, symmetric signing keys, and raw connection strings with credentials are strictly excluded from all log sinks.</p>
+
+<h2>20.4 Correlation ID Tracing</h2>
+<p><code>CorrelationIdMiddleware</code> extracts <code>X-Correlation-ID</code> from incoming request headers or generates a new <code>Guid</code>. It attaches the ID to <code>HttpContext.Items[&quot;CorrelationId&quot;]</code>, adds it to the HTTP response header, and passes it to <code>ExceptionMiddleware</code> and <code>RequestLoggingMiddleware</code> to ensure end-to-end request traceability across distributed logs.</p>
+
+<div class="page-break"></div>
+
+<h1>21 SOLID Principles &mdash; Implementation Mapping</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Principle</th>
+      <th>How BAMS Applies It</th>
+      <th>Concrete Implementation Location</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>S &mdash; Single Responsibility</strong></td>
+      <td>Each class has exactly one reason to change. Controllers handle HTTP routing; services contain business rules; DbContext manages persistence; DTOs format payloads.</td>
+      <td>TransactionsController handles HTTP status codes; TransactionService handles balance arithmetic and ledger persistence.</td>
+    </tr>
+    <tr>
+      <td><strong>O &mdash; Open/Closed</strong></td>
+      <td>Systems are open for extension but closed for modification. New transaction types or backup formats can be introduced without breaking existing controllers.</td>
+      <td>ExceptionMiddleware uses C# pattern matching switch expressions to accommodate new domain exceptions without modifying existing catch blocks.</td>
+    </tr>
+    <tr>
+      <td><strong>L &mdash; Liskov Substitution</strong></td>
+      <td>Subtypes must be substitutable for their base types. ApplicationUser extends IdentityUser seamlessly.</td>
+      <td>ApplicationUser is passed to UserManager&lt;ApplicationUser&gt; without altering Identity behavior.</td>
+    </tr>
+    <tr>
+      <td><strong>I &mdash; Interface Segregation</strong></td>
+      <td>Clients depend only on focused, minimal interfaces rather than bloated abstractions.</td>
+      <td>IAccountService, ITransactionService, IAuthService, and ISystemBackupService are kept segregated.</td>
+    </tr>
+    <tr class="last-row">
+      <td><strong>D &mdash; Dependency Inversion</strong></td>
+      <td>High-level business modules depend on abstractions (interfaces), never on concrete infrastructure classes.</td>
+      <td>Controllers depend on ITransactionService and IAccountService, injected via ASP.NET Core DI container in Program.cs.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1>22 Design Patterns &mdash; Implementation Mapping</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Pattern</th>
+      <th>BAMS Usage</th>
+      <th>Architectural Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Layered Architecture</strong></td>
+      <td>Controller &rarr; Service &rarr; DbContext &rarr; SQL Server</td>
+      <td>Separation of presentation, business rules, and data access.</td>
+    </tr>
+    <tr>
+      <td><strong>Service Layer Pattern</strong></td>
+      <td>AccountService, TransactionService, AuthService</td>
+      <td>Encapsulates transaction business logic and domain rules.</td>
+    </tr>
+    <tr>
+      <td><strong>Repository &amp; Unit of Work</strong></td>
+      <td>DbSet&lt;T&gt; (Repository) and DbContext (Unit of Work)</td>
+      <td>EF Core native implementation coordinating persistence and transaction boundaries.</td>
+    </tr>
+    <tr>
+      <td><strong>DTO Pattern</strong></td>
+      <td>DepositRequest, TransferRequest, TransactionResponse</td>
+      <td>Prevents over-posting, protects internal fields, and stabilizes API contracts.</td>
+    </tr>
+    <tr>
+      <td><strong>Dependency Injection</strong></td>
+      <td>builder.Services.AddScoped&lt;TInterface, TImpl&gt;()</td>
+      <td>Inversion of control; promotes testability and loose coupling.</td>
+    </tr>
+    <tr>
+      <td><strong>Middleware (Chain of Responsibility)</strong></td>
+      <td>CorrelationId &rarr; Exception &rarr; Logging &rarr; RateLimiter</td>
+      <td>Sequential request processing pipeline with short-circuiting capabilities.</td>
+    </tr>
+    <tr class="last-row">
+      <td><strong>Options Pattern</strong></td>
+      <td>IOptions&lt;JwtSettings&gt;</td>
+      <td>Strongly typed configuration section binding from appsettings.json.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>22.1 OOP Principles Applied</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Concept</th>
+      <th>Concrete Application in BAMS</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Encapsulation</strong></td>
+      <td>Banking models enforce private state where necessary and validate data via properties; DTOs encapsulate request payloads.</td>
+    </tr>
+    <tr>
+      <td><strong>Abstraction</strong></td>
+      <td>Controllers consume interfaces (ITransactionService) without knowledge of SQL Server or EF Core internals.</td>
+    </tr>
+    <tr>
+      <td><strong>Inheritance</strong></td>
+      <td>ApplicationUser inherits from IdentityUser; custom domain exceptions (InsufficientBalanceException) inherit from InvalidOperationException.</td>
+    </tr>
+    <tr class="last-row">
+      <td><strong>Polymorphism</strong></td>
+      <td>ExceptionMiddleware polymorphically handles distinct exception types through type-pattern matching.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<h1>23 Security, Exception Handling &amp; Production Hardening</h1>
+
+<h2>23.1 Exception Handling Contract</h2>
+<p><code>ExceptionMiddleware</code> catches all downstream exceptions and translates them into uniform, sanitized JSON responses:</p>
+<pre>
+public async Task InvokeAsync(HttpContext context)
+{
+    try { await _next(context); }
+    catch (Exception ex) { await HandleExceptionAsync(context, ex); }
+}
+
+private async Task HandleExceptionAsync(HttpContext context, Exception ex)
+{
+    var statusCode = ex switch
+    {
+        DbUpdateConcurrencyException =&gt; 409,
+        UnauthorizedAccessException  =&gt; 401,
+        KeyNotFoundException         =&gt; 404,
+        ArgumentException            =&gt; 400,
+        InvalidOperationException    =&gt; 422, // InsufficientBalance, AccountInactive, InvalidAccountType
+        _                            =&gt; 500
+    };
+
+    var message = _env.IsDevelopment() ? ex.Message : "Something went wrong. Please try again later.";
+    // Returns { success = false, message, statusCode, correlationId }
+}
+</pre>
+
+<h2>23.2 Security Design</h2>
+<ul>
+  <li><strong>Authentication:</strong> Signed JWT tokens containing user claims, role claims, and 60-minute expiration.</li>
+  <li><strong>Brute-Force Protection:</strong> Fixed-window rate limiting on login restricts requests to 10/min per remote IP.</li>
+  <li><strong>SQL Injection Defense:</strong> EF Core parameterizes all queries; raw concatenated SQL is prohibited.</li>
+  <li><strong>Account Ownership Validation:</strong> Normal users are strictly restricted to inspecting and transferring from accounts matching their own <code>ClaimTypes.NameIdentifier</code>.</li>
+</ul>
+
+<h2>23.3 Security Testing Checklist</h2>
+<p>Expired JWT &bull; Invalid signature &bull; Missing token &bull; Wrong role &bull; Non-owner account access &bull; SQL injection strings &bull; Negative deposit amounts &bull; Brute-force rate limit trigger &bull; Secret leak audit in logs.</p>
+
+<h2>23.4 Deployment</h2>
+<p>The backend compiles into a self-contained or framework-dependent ASP.NET Core application hosted via Kestrel behind IIS, Nginx, or Windows Services. The React SPA is compiled using <code>npm run build</code> into static assets served via CDN or web server.</p>
+
+<h2>23.5 Exact Configuration / Launch Profile</h2>
+<pre>
+{
+  "profiles": {
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "applicationUrl": "https://localhost:7190;http://localhost:5247",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
+</pre>
+
+<h2>23.6 Git / Branch / Commit Rules</h2>
+<ul>
+  <li><strong>Branch Strategy:</strong> <code>main</code> (production ready) &larr; <code>develop</code> &larr; <code>feature/&lt;phase-name&gt;</code>.</li>
+  <li><strong>Commit Convention:</strong> Conventional Commits: <code>feat(transactions): implement atomic cheque transfer</code>.</li>
+  <li><strong>Secrets:</strong> Never commit passwords, signing keys, or connection strings.</li>
+</ul>
+
+<h1>24 Testing Matrix</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Module</th>
+      <th>Unit Tests</th>
+      <th>Integration Tests</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Authentication</td>
+      <td>Password hashing, JWT generation, claim parsing, invalid login rejection</td>
+      <td>POST /api/v1/auth/login happy path, wrong password &rarr; 401, rate limiter &rarr; 429</td>
+    </tr>
+    <tr>
+      <td>Accounts</td>
+      <td>Account number generation, initial deposit validation, soft deactivation flag</td>
+      <td>POST /api/v1/accounts as User &rarr; 201; non-owner access &rarr; 401/403</td>
+    </tr>
+    <tr>
+      <td>Transactions</td>
+      <td>Savings cash-only rule, Checking cash &amp; cheque support, balance arithmetic</td>
+      <td>Cash deposit &rarr; 200; Cheque on Savings &rarr; 422; Insufficient balance &rarr; 422</td>
+    </tr>
+    <tr>
+      <td>Transfers</td>
+      <td>Transfer between Checking accounts, debit &amp; credit verification</td>
+      <td>Atomic transfer &rarr; dual ledger creation; Concurrency collision &rarr; 409 Conflict</td>
+    </tr>
+    <tr class="last-row">
+      <td>System Save/Restore</td>
+      <td>JSON serialization schema, entity rehydration, AsNoTracking query</td>
+      <td>GET /system/save as User &rarr; 403; as Admin &rarr; 200; Restore invalid JSON &rarr; 400</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<h1>25 Sample Test Case Table</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Test ID</th>
+      <th>Module</th>
+      <th>Scenario</th>
+      <th>Expected Result</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>TC001</td>
+      <td>Auth</td>
+      <td>Valid login credentials</td>
+      <td>200 OK &mdash; Signed JWT token generated</td>
+    </tr>
+    <tr>
+      <td>TC002</td>
+      <td>Auth</td>
+      <td>Invalid password</td>
+      <td>401 Unauthorized</td>
+    </tr>
+    <tr>
+      <td>TC003</td>
+      <td>Auth</td>
+      <td>Login attempts exceed 10/min from same IP</td>
+      <td>429 Too Many Requests</td>
+    </tr>
+    <tr>
+      <td>TC004</td>
+      <td>Accounts</td>
+      <td>Create Savings account with initial deposit</td>
+      <td>201 Created &mdash; AccountNumber generated</td>
+    </tr>
+    <tr>
+      <td>TC005</td>
+      <td>Accounts</td>
+      <td>User accesses another customer's account balance</td>
+      <td>401 Unauthorized / 403 Forbidden</td>
+    </tr>
+    <tr>
+      <td>TC006</td>
+      <td>Transactions</td>
+      <td>Deposit cash into Savings account</td>
+      <td>200 OK &mdash; Balance credited</td>
+    </tr>
+    <tr>
+      <td>TC007</td>
+      <td>Transactions</td>
+      <td>Deposit cheque into Savings account</td>
+      <td>422 Unprocessable Entity (Cash only rule)</td>
+    </tr>
+    <tr>
+      <td>TC008</td>
+      <td>Transactions</td>
+      <td>Deposit cheque into Checking account</td>
+      <td>200 OK &mdash; Balance credited</td>
+    </tr>
+    <tr>
+      <td>TC009</td>
+      <td>Transactions</td>
+      <td>Withdrawal exceeding current balance</td>
+      <td>422 Unprocessable Entity (Insufficient funds)</td>
+    </tr>
+    <tr>
+      <td>TC010</td>
+      <td>Transactions</td>
+      <td>Transfer funds from Savings account</td>
+      <td>422 Unprocessable Entity (Savings transfer prohibited)</td>
+    </tr>
+    <tr>
+      <td>TC011</td>
+      <td>Transactions</td>
+      <td>Transfer funds between Checking accounts</td>
+      <td>200 OK &mdash; Dual transaction records written</td>
+    </tr>
+    <tr>
+      <td>TC012</td>
+      <td>Transactions</td>
+      <td>Transaction on soft-deactivated account</td>
+      <td>422 Unprocessable Entity (Account inactive)</td>
+    </tr>
+    <tr>
+      <td>TC013</td>
+      <td>Concurrency</td>
+      <td>Simultaneous balance update race condition</td>
+      <td>409 Conflict (RowVersion mismatch caught)</td>
+    </tr>
+    <tr>
+      <td>TC014</td>
+      <td>System</td>
+      <td>Regular user accesses GET /api/v1/system/save</td>
+      <td>403 Forbidden</td>
+    </tr>
+    <tr class="last-row">
+      <td>TC015</td>
+      <td>System</td>
+      <td>Admin exports and rehydrates system backup</td>
+      <td>200 OK &mdash; Full database restored atomically</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1>26 Required Diagrams</h1>
+<p>The following technical diagrams document the structural and dynamic aspects of the system:</p>
+<ul>
+  <li><strong>High-Level System Architecture:</strong> Decoupled React 18 SPA + ASP.NET Core 8 Web API + SQL Server.</li>
+  <li><strong>Component &amp; Middleware Pipeline:</strong> Correlation ID &rarr; Exception &rarr; Logging &rarr; RateLimiter &rarr; JWT Auth &rarr; Controllers.</li>
+  <li><strong>Entity-Relationship Schema:</strong> AspNetUsers, AspNetRoles, Accounts (with RowVersion), Transactions (Dual FKs).</li>
+  <li><strong>Authentication Sequence:</strong> Client &rarr; RateLimiter &rarr; Identity &rarr; JWT token generation &rarr; Axios storage.</li>
+  <li><strong>Atomic Transfer Sequence:</strong> BeginTransactionAsync &rarr; Balance checks &rarr; Concurrency token check &rarr; CommitAsync.</li>
+  <li><strong>Save &amp; Restore Flow:</strong> JSON serialization &rarr; Database truncation &rarr; Atomic transactional rehydration.</li>
+</ul>
+
+<h1>27 Final Acceptance Criteria</h1>
+<div class="checklist-item">&#9633; Application builds with zero compilation errors and zero warnings.</div>
+<div class="checklist-item">&#9633; SQL Server migrations apply cleanly on a fresh database.</div>
+<div class="checklist-item">&#9633; User registration, login, and JWT Bearer authentication function correctly.</div>
+<div class="checklist-item">&#9633; Fixed-window rate limiting prevents brute-force attacks on the login endpoint (429 returned).</div>
+<div class="checklist-item">&#9633; Role-based authorization strictly isolates Admin and User capabilities.</div>
+<div class="checklist-item">&#9633; Account creation generates unique account numbers formatted as <code>ACC-YYYYMMDD-XXXX</code>.</div>
+<div class="checklist-item">&#9633; Savings accounts strictly permit cash transactions and reject cheque deposits/transfers (422 returned).</div>
+<div class="checklist-item">&#9633; Checking accounts support both cash and cheque transactions and inter-account transfers.</div>
+<div class="checklist-item">&#9633; Withdrawals and transfers exceeding available funds throw InsufficientBalanceException (422 returned).</div>
+<div class="checklist-item">&#9633; Transfers execute atomically under IDbContextTransaction, writing debit and credit legs.</div>
+<div class="checklist-item">&#9633; Optimistic concurrency via RowVersion detects balance update collisions (409 returned).</div>
+<div class="checklist-item">&#9633; Account deactivation is soft (IsActive = false), preserving transaction history foreign keys.</div>
+<div class="checklist-item">&#9633; Transactions on deactivated accounts are rejected with AccountInactiveException (422 returned).</div>
+<div class="checklist-item">&#9633; Read-only queries use AsNoTracking() for optimal query performance.</div>
+<div class="checklist-item">&#9633; Transaction history supports pagination (Skip/Take) and date-range filtering.</div>
+<div class="checklist-item">&#9633; Admin save/restore exports complete database to JSON and rehydrates it atomically.</div>
+<div class="checklist-item">&#9633; ExceptionMiddleware sanitizes unhandled errors, omitting stack traces and SQL details.</div>
+<div class="checklist-item">&#9633; Serilog records structured logs to Console and daily rolling files under Logs/bams-.log.</div>
+<div class="checklist-item">&#9633; CorrelationIdMiddleware tracks requests across logs and responses via X-Correlation-ID.</div>
+<div class="checklist-item">&#9633; GET /health probes database connectivity, returning 200 OK or 503 Service Unavailable.</div>
+
+<h1>28 Definition of Done (Per Module)</h1>
+<p>An AI coding tool or developer must not report a module as &ldquo;complete&rdquo; until every item below is verified:</p>
+<div class="checklist-item">[ ] Entity and enums created with appropriate data types (decimal(18,2), byte[] RowVersion).</div>
+<div class="checklist-item">[ ] EF Core Fluent API configuration completed with indexes and DeleteBehavior.Restrict.</div>
+<div class="checklist-item">[ ] Database migration generated and applied cleanly against SQL Server.</div>
+<div class="checklist-item">[ ] Scoped service interface and implementation created with business rules.</div>
+<div class="checklist-item">[ ] Request and response DTOs created with Data Annotation validation attributes.</div>
+<div class="checklist-item">[ ] Controller action implemented, returning ActionResult&lt;T&gt; with appropriate HTTP status codes.</div>
+<div class="checklist-item">[ ] Authorization attributes ([Authorize], [Authorize(Roles = "Admin")]) applied.</div>
+<div class="checklist-item">[ ] Structured logging added for domain events via ILogger.</div>
+<div class="checklist-item">[ ] Endpoints manually verified via Swagger UI.</div>
+<div class="checklist-item">[ ] Frontend API client service functions created.</div>
+<div class="checklist-item">[ ] React page components created with loading, error, and empty state handlers.</div>
+<div class="checklist-item">[ ] Frontend form validation matches backend Data Annotation constraints.</div>
+<div class="checklist-item">[ ] Backend and frontend compile with zero errors.</div>
+
+<div class="page-break"></div>
+
+<h1>29 Build Order &amp; Working Agreement for an AI Coding Tool</h1>
+
+<h2>29.1 Build Order (Waterfall-Sequenced)</h2>
+<ol>
+  <li><strong>Data Layer &amp; Identity Core:</strong> ApplicationUser, ApplicationDbContext, DbInitializer, InitialIdentity migration.</li>
+  <li><strong>Authentication &amp; JWT:</strong> JwtSettings, AuthService, AuthController, RateLimiter configuration, Swagger Bearer setup.</li>
+  <li><strong>Accounts Domain:</strong> Account entity, AddBankAccount migration, AccountService, AccountsController.</li>
+  <li><strong>Transactions Domain:</strong> Transaction entity, AddTransactions migration, RowVersion concurrency token, TransactionService (Deposit, Withdraw, Transfer).</li>
+  <li><strong>Transaction History &amp; Querying:</strong> AddTransactionHistoryIndexes migration, paginated LINQ queries, query DTOs.</li>
+  <li><strong>System Backup &amp; Rehydration:</strong> SystemBackupDto, SystemBackupService, SystemController (GET /save, POST /restore).</li>
+  <li><strong>Production Hardening:</strong> Serilog configuration, CorrelationIdMiddleware, ExceptionMiddleware, RequestLoggingMiddleware, HealthChecks.</li>
+  <li><strong>React Frontend:</strong> Vite setup, Axios interceptors, AuthContext, ProtectedRoute, Dashboard, Accounts, Transactions, Backup/Restore pages.</li>
+  <li><strong>End-to-End Verification:</strong> Comprehensive integration testing across the full banking lifecycle.</li>
+</ol>
+
+<h2>29.2 Working Agreement</h2>
+<p>If this document is handed to an AI coding tool to generate or maintain the code, it must follow these rules:</p>
+<ul>
+  <li><strong>Build incrementally, phase by phase (&sect;29.1)</strong> &mdash; never attempt to generate the entire application in one pass.</li>
+  <li><strong>Before modifying an existing file, read its current contents and reuse existing models rather than redefining them.</strong></li>
+  <li><strong>Never create duplicate or conflicting classes for the same concept.</strong></li>
+  <li><strong>After each phase: compile the affected projects and fix errors before proceeding.</strong></li>
+  <li><strong>Never claim a feature is implemented unless it actually exists and compiles in the code.</strong></li>
+  <li><strong>For each non-trivial architectural decision, state: what was chosen, why, where it&rsquo;s implemented, and the trade-off.</strong></li>
+  <li><strong>Do not introduce a design pattern, technology, or module beyond what is specified in this document.</strong></li>
+</ul>
+
+<h1>30 One-Minute Team Explanation</h1>
+<p class="callout">
+&ldquo;The Bank Account Management System (BAMS) is a decoupled React 18 SPA and ASP.NET Core 8 Web API application using Entity Framework Core 8 and Microsoft SQL Server. It follows a Clean Layered Architecture across API, Middleware, Service, and Data layers. Dependency injection, the DTO pattern, and EF Core as the Unit of Work provide strong separation of concerns. Security is established through ASP.NET Core Identity with PBKDF2 password hashing, signed JWT Bearer tokens, rate limiting on authentication, and account ownership enforcement. Business logic strictly distinguishes Savings accounts (cash transactions only) from Checking accounts (cash and cheque transactions, inter-account transfers). Financial transfers execute atomically under explicit database transactions, while account balance race conditions are eliminated using SQL Server rowversion optimistic concurrency tokens. Operational visibility is achieved via Serilog rolling file logs, X-Correlation-ID request tracing, and database health checks. The platform is designed and delivered via a single Waterfall SDLC pass &mdash; requirements and low-level design fixed up-front in this document, verified through systematic integration testing.&rdquo;
+</p>
+
+<h1>31 AI Project Generation Prompt</h1>
+<p>This is the ready-to-copy prompt to paste into an AI coding tool alongside this document:</p>
+<pre>
+You are the senior software architect and full-stack developer responsible for implementing
+the Bank Account Management System (BAMS).
+
+Read this entire document before writing any code.
+This document is the SINGLE SOURCE OF TRUTH. Implement the complete project according to
+every requirement specified in it.
+
+Technology:
+- ASP.NET Core Web API, C# (.NET 8.0 LTS)
+- React 18 + Vite (JavaScript / JSX)
+- Microsoft SQL Server
+- Entity Framework Core 8.0.10 (Code-First)
+- ASP.NET Core Identity
+- JWT Bearer Authentication (HMAC-SHA256)
+- Serilog (Console + Rolling Daily File Sink in Logs/bams-.log)
+- ASP.NET Core RateLimiter (Fixed Window on /api/v1/auth/login)
+- HealthChecks (/health)
+- Swagger / OpenAPI
+
+Do not:
+- change the architecture, database (use SQL Server, NOT PostgreSQL), or technology stack
+- remove or rename modules, entities, roles, or permissions
+- invent endpoints, DTO fields, or permissions not in this document
+- bypass authorization on any endpoint
+- expose EF Core entities directly through the API
+- put business logic inside controllers or React components
+- create placeholder implementations (TODO, NotImplementedException, empty methods)
+- skip database migrations
+- commit secrets, .env files, or generated build output
+
+Follow the Build Order (§29.1) and AI Coding Execution Contract (§2) sections of this document exactly.
+
+After each phase:
+1. Build (backend and frontend)
+2. Run tests and verify zero compiler errors
+3. Verify migrations apply cleanly to SQL Server
+4. Continue only when the phase is green
+
+Before declaring any module complete, verify it against the Definition of Done checklist in this document.
+
+At the end of the project:
+- run all backend verification tests
+- build the frontend
+- verify authorization for every role/route combination in the authorization matrix
+- verify every item in the Final Acceptance Criteria section
+
+Do not claim the project is complete until every acceptance criterion in this document has
+been satisfied and verified, not assumed.
+
+End of Document. This LLD is the complete, consolidated implementation contract for the BAMS —
+nothing outside it should be assumed necessary, and nothing inside it is optional.
+</pre>
+
+</body>
+</html>

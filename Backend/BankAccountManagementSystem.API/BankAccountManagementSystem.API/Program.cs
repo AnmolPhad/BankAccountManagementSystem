@@ -299,6 +299,10 @@ try
 
     app.Run();
 }
+catch (HostAbortedException)
+{
+    // Thrown by EF Core migration design-time tools when inspecting WebApplicationBuilder; safe to ignore.
+}
 catch (Exception ex)
 {
     Log.Fatal(ex, "Application terminated unexpectedly");
