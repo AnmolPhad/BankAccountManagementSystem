@@ -1,0 +1,14 @@
+Circle
+Radius: 5
+
+Rectangle
+Length: 10
+Width: 20
+
+Square
+Side: 6
+
+Triangle
+Side1: 3
+Side2: 4
+Side3: 5
