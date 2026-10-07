@@ -81,7 +81,7 @@ namespace BankAccountManagementSystem.API.Services.Implementations
                 .FirstOrDefaultAsync(u => u.EmployeeCode == request.EmployeeCode);
             if (existingByCode != null)
                 return (false, "An account with this employee code already exists.", null);
-
+ 
             var user = new ApplicationUser
             {
                 UserName = request.Email,

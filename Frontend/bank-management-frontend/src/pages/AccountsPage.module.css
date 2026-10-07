@@ -405,6 +405,34 @@
   background: rgba(239, 68, 68, 0.25);
   color: #fff;
 }
+.deleteBtnDisabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: auto;
+  background: rgba(148, 163, 184, 0.1);
+  border-color: rgba(148, 163, 184, 0.2);
+  color: var(--text-muted);
+}
+.deleteBtnDisabled:hover {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text-muted);
+}
+.balanceDeleteNotice {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.725rem;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-md);
+  padding: 0.35rem 0.6rem;
+  margin-top: 0.25rem;
+}
+.noticeIcon {
+  flex-shrink: 0;
+  color: #ef4444;
+}
 
 /* ── Empty State ─────────────────────────────────────────────── */
 .emptyState {
@@ -479,6 +507,37 @@
   display: flex; align-items: center; justify-content: center;
   color: #ef4444;
   margin-bottom: 1rem;
+}
+.modalBlockIcon {
+  width: 56px; height: 56px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #ef4444;
+  margin-bottom: 1rem;
+}
+.modalAccountMeta {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  width: 100%;
+  margin: 0.75rem 0;
+  text-align: left;
+  font-size: 0.825rem;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.modalAccountMeta p {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+}
+.modalAccountMeta strong {
+  color: var(--text-primary);
 }
 .modalTitle { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
 .modalBody { font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem; line-height: 1.5; }

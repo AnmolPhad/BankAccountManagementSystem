@@ -45,6 +45,12 @@ export default function AccountsPage() {
 
   const confirmDelete = async () => {
     if (!deletingId) return;
+    const targetAccount = accounts.find((a) => a.accountId === deletingId);
+    if (targetAccount && Number(targetAccount.balance ?? 0) > 0) {
+      setError('Account cannot be deleted because the balance must be zero.');
+      setDeletingId(null);
+      return;
+    }
     setIsDeleting(true);
     setError('');
     try {
@@ -157,6 +163,7 @@ export default function AccountsPage() {
             {activeAccounts.map((acc) => {
               const isSavings = (acc.accountType === 'Savings' || acc.accountType === 1);
               const typeName = isSavings ? 'Savings' : 'Checking';
+              const isZeroBalance = Number(acc.balance ?? 0) === 0;
 
               return (
                 <div key={acc.accountId} className={styles.accountCard}>
@@ -214,47 +221,89 @@ export default function AccountsPage() {
                     </Link>
                     <button
                       onClick={() => handleDeleteClick(acc.accountId)}
-                      className={styles.deleteBtn}
-                      title="Deactivate Account"
+                      className={`${styles.deleteBtn} ${!isZeroBalance ? styles.deleteBtnDisabled : ''}`}
+                      disabled={!isZeroBalance}
+                      title={isZeroBalance ? "Delete Account" : "Account can be deleted only when the balance is ₹0.00."}
                     >
                       <Trash2 size={13} /> Delete
                     </button>
                   </div>
+
+                  {!isZeroBalance && (
+                    <div className={styles.balanceDeleteNotice}>
+                      <AlertCircle size={12} className={styles.noticeIcon} />
+                      <span>Account can be deleted only when the balance is ₹0.00.</span>
+                    </div>
+                  )}
                 </div>
               );
             })}
           </section>
         )}
 
-        {/* Confirmation Modal */}
-        {deletingId && (
-          <div className={styles.modalOverlay} role="dialog" aria-modal="true">
-            <div className={styles.modalCard}>
-              <div className={styles.modalWarnIcon}><AlertTriangle size={28} /></div>
-              <h3 className={styles.modalTitle}>Delete Bank Account?</h3>
-              <p className={styles.modalBody}>
-                Are you sure you want to deactivate this bank account? The account status will be set to inactive in compliance with banking retention policies.
-              </p>
-              <div className={styles.modalActions}>
-                <button
-                  onClick={() => setDeletingId(null)}
-                  className={styles.cancelBtn}
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  className={styles.confirmDeleteBtn}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? <Loader2 size={16} className={styles.spinner} /> : <Trash2 size={16} />}
-                  Confirm Delete
-                </button>
+        {/* Confirmation / Information Modal */}
+        {deletingId && (() => {
+          const deletingAccount = accounts.find((a) => a.accountId === deletingId);
+          if (!deletingAccount) return null;
+          const isZeroBalance = Number(deletingAccount.balance ?? 0) === 0;
+
+          return (
+            <div className={styles.modalOverlay} role="dialog" aria-modal="true">
+              <div className={styles.modalCard}>
+                {isZeroBalance ? (
+                  <>
+                    <div className={styles.modalWarnIcon}><AlertTriangle size={28} /></div>
+                    <h3 className={styles.modalTitle}>Delete Account?</h3>
+                    <div className={styles.modalAccountMeta}>
+                      <p><span>Account Number:</span> <strong>{deletingAccount.accountNumber}</strong></p>
+                      <p><span>Balance:</span> <strong>{formatCurrency(deletingAccount.balance)}</strong></p>
+                    </div>
+                    <p className={styles.modalBody}>
+                      Are you sure you want to deactivate this bank account? The account status will be set to inactive in compliance with banking retention policies.
+                    </p>
+                    <div className={styles.modalActions}>
+                      <button
+                        onClick={() => setDeletingId(null)}
+                        className={styles.cancelBtn}
+                        disabled={isDeleting}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={confirmDelete}
+                        className={styles.confirmDeleteBtn}
+                        disabled={isDeleting}
+                      >
+                        {isDeleting ? <Loader2 size={16} className={styles.spinner} /> : <Trash2 size={16} />}
+                        Delete
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className={styles.modalBlockIcon}><AlertCircle size={28} /></div>
+                    <h3 className={styles.modalTitle}>Account cannot be deleted.</h3>
+                    <div className={styles.modalAccountMeta}>
+                      <p><span>Account Number:</span> <strong>{deletingAccount.accountNumber}</strong></p>
+                      <p><span>Current Balance:</span> <strong>{formatCurrency(deletingAccount.balance)}</strong></p>
+                    </div>
+                    <p className={styles.modalBody}>
+                      Please withdraw or otherwise bring the balance to ₹0.00 before deleting the account.
+                    </p>
+                    <div className={styles.modalActions}>
+                      <button
+                        onClick={() => setDeletingId(null)}
+                        className={styles.cancelBtn}
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
     </div>
   );

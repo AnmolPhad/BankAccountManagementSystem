@@ -168,7 +168,7 @@ namespace BankAccountManagementSystem.API.Services.Implementations
         // ─────────────────────────────────────────────────────────────────────
         // DEACTIVATE ACCOUNT (Soft delete: IsActive = false, UpdatedAt = UtcNow)
         // ─────────────────────────────────────────────────────────────────────
-        public async Task<(bool Exists, bool IsAuthorized, bool AlreadyInactive, string Message)> DeactivateAccountAsync(
+        public async Task<(bool Exists, bool IsAuthorized, bool AlreadyInactive, bool HasNonZeroBalance, string Message)> DeactivateAccountAsync(
             Guid id,
             string callerId,
             bool isAdmin)
@@ -177,19 +177,28 @@ namespace BankAccountManagementSystem.API.Services.Implementations
 
             if (account == null)
             {
-                return (false, false, false, "Account not found.");
+                return (false, false, false, false, "Account not found.");
             }
 
             // Enforce ownership: normal users can deactivate only their own accounts; admins can deactivate any
             if (!isAdmin && account.UserId != callerId)
             {
-                return (true, false, false, "You do not have permission to deactivate this account.");
+                return (true, false, false, false, "You do not have permission to deactivate this account.");
             }
 
             // Check if already deactivated
             if (!account.IsActive)
             {
-                return (true, true, true, "Account is already deactivated.");
+                return (true, true, true, false, "Account is already deactivated.");
+            }
+
+            // Enforce business rule: Account can ONLY be deleted when its current balance is exactly ₹0.00
+            if (account.Balance != 0m)
+            {
+                _logger.LogWarning(
+                    "Account deletion rejected: Account {AccountNumber} (ID: {AccountId}) has non-zero balance: {Balance}",
+                    account.AccountNumber, account.AccountId, account.Balance);
+                return (true, true, false, true, "Account cannot be deleted because the balance must be zero.");
             }
 
             // Soft-deactivate: set IsActive to false and record update timestamp
@@ -201,7 +210,7 @@ namespace BankAccountManagementSystem.API.Services.Implementations
             _logger.LogInformation("Account {AccountNumber} (ID: {AccountId}) deactivated by caller {CallerId}",
                 account.AccountNumber, account.AccountId, callerId);
 
-            return (true, true, false, "Account has been deactivated successfully.");
+            return (true, true, false, false, "Account has been deactivated successfully.");
         }
 
         // ─────────────────────────────────────────────────────────────────────

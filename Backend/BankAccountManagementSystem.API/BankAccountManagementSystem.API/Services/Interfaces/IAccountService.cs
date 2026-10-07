@@ -34,9 +34,10 @@ namespace BankAccountManagementSystem.API.Services.Interfaces
         /// <summary>
         /// Deactivates an account (soft delete: sets IsActive = false and stamps UpdatedAt).
         /// Enforces ownership: normal users can deactivate only their own accounts; admins can deactivate any account.
-        /// Returns whether the account exists, whether caller is authorized, whether it was already inactive, and a status message.
+        /// Enforces business rule: an account can only be deactivated if its balance is exactly 0.00.
+        /// Returns whether the account exists, whether caller is authorized, whether it was already inactive, whether it has a non-zero balance, and a status message.
         /// </summary>
-        Task<(bool Exists, bool IsAuthorized, bool AlreadyInactive, string Message)> DeactivateAccountAsync(Guid id, string callerId, bool isAdmin);
+        Task<(bool Exists, bool IsAuthorized, bool AlreadyInactive, bool HasNonZeroBalance, string Message)> DeactivateAccountAsync(Guid id, string callerId, bool isAdmin);
 
         /// <summary>
         /// Looks up an active account by its customer-facing 10-digit account number.

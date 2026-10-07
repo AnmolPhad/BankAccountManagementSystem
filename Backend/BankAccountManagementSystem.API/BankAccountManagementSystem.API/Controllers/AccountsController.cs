@@ -173,6 +173,7 @@ namespace BankAccountManagementSystem.API.Controllers
         /// Row remains in the database for audit integrity.
         /// - Normal users can deactivate only their own accounts.
         /// - Admins can deactivate any account.
+        /// - Business Rule: Account can ONLY be deleted when its balance is exactly ₹0.00.
         /// </summary>
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -190,7 +191,7 @@ namespace BankAccountManagementSystem.API.Controllers
 
             var isAdmin = User.IsInRole("Admin");
 
-            var (exists, isAuthorized, alreadyInactive, message) = await _accountService.DeactivateAccountAsync(id, callerId, isAdmin);
+            var (exists, isAuthorized, alreadyInactive, hasNonZeroBalance, message) = await _accountService.DeactivateAccountAsync(id, callerId, isAdmin);
 
             if (!exists)
             {
@@ -205,6 +206,11 @@ namespace BankAccountManagementSystem.API.Controllers
             if (alreadyInactive)
             {
                 return BadRequest(new { success = false, message }); // 400 Bad Request: already inactive
+            }
+
+            if (hasNonZeroBalance)
+            {
+                return BadRequest(new { success = false, message }); // 400 Bad Request: balance must be zero
             }
 
             return Ok(new { success = true, message });
